@@ -22,8 +22,10 @@
 <script>
 export default {
   name: 'App',
-  // Sua lógica de script aqui
-};
+  created() {
+    this.$store.dispatch('auth/initializeAuth');
+  },
+}; //
 </script>
 
 <style>

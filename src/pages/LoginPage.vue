@@ -54,9 +54,7 @@
 </template>
 
 <script>
-
 import { LoginService } from 'src/services/auth/LoginService';
-
 
 const service = new LoginService();
 
@@ -79,6 +77,7 @@ export default {
   },
   mounted() {
     this.loading = false;
+    this.$store.dispatch('auth/logout');
   },
 
   methods: {
@@ -114,14 +113,14 @@ export default {
         return;
       }
 
-      this.$store.dispatch('auth/login', response.data.token);
-
       this.$q.notify({
         color: 'green-4',
         textColor: 'white',
         icon: 'done',
         message: 'Usuário logado com sucesso!',
       });
+
+      this.$router.replace('/');
     },
 
     onReset() {

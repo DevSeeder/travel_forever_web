@@ -1,33 +1,46 @@
+// store/modules/auth.js
+
 export default {
-  namespaced: true,
-
-  state: {
+  namespaced: true, // Habilita o uso de namespace neste módulo
+  state: () => ({
+    isAuthenticated: false,
     token: null,
-  },
-
+  }),
   mutations: {
-    SET_TOKEN(state, token) {
-      state.token = token;
+    setAuth(state, payload) {
+      state.isAuthenticated = payload.isAuthenticated;
+      state.token = payload.token;
+
+      localStorage.setItem(
+        'auth',
+        JSON.stringify({
+          isAuthenticated: state.isAuthenticated,
+          token: state.token,
+        })
+      );
     },
   },
-
   actions: {
     login({ commit }, token) {
-      commit('SET_TOKEN', token);
-      // Aqui você pode adicionar lógica para persistir o token no LocalStorage, se necessário
-      localStorage.setItem('user-token', token);
+      commit('setAuth', { isAuthenticated: true, token });
+    },
+    initializeAuth({ commit }) {
+      const auth = localStorage.getItem('auth');
+      if (auth) {
+        const authState = JSON.parse(auth);
+        commit('setAuth', authState);
+      }
     },
     logout({ commit }) {
-      commit('SET_TOKEN', null);
-      // Remover o token do LocalStorage
-      localStorage.removeItem('user-token');
+      commit('setAuth', { isAuthenticated: false, token: null });
     },
   },
-
   getters: {
     isAuthenticated(state) {
-      return !!state.token;
+      return state.isAuthenticated;
     },
-    token: (state) => state.token,
+    token(state) {
+      return state.token;
+    },
   },
 };

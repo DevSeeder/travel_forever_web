@@ -5,10 +5,12 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    meta: { requiresAuth: true },
   },
   // Adicione esta linha
   { path: '/login', component: () => import('pages/LoginPage.vue') },
   { path: '/register', component: () => import('pages/RegisterPage.vue') },
+  { path: '/logout', component: () => import('pages/LoginPage.vue') },
 
   // Always leave this as last one,
   // but you can also remove it
