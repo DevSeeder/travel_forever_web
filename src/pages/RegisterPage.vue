@@ -4,14 +4,25 @@
   <q-page class="flex flex-center" style="background-size: cover">
     <q-card class="q-pa-md" style="width: 350px; max-width: 90%">
       <q-card-section class="text-center">
-        <div class="text-h6">Login</div>
+        <div class="text-h6">Register</div>
       </q-card-section>
 
       <q-card-section>
         <q-form @submit.prevent="onSubmit" @reset="onReset" class="q-gutter-md">
           <q-input
             filled
-            v-model="loginForm.username"
+            v-model="registerForm.name"
+            label="Name"
+            :error="errors.name"
+            autofocus
+          />
+          <div v-if="errors.name" class="text-negative">
+            Name is required
+          </div>
+
+          <q-input
+            filled
+            v-model="registerForm.username"
             label="Username"
             :error="errors.username"
             autofocus
@@ -22,7 +33,7 @@
 
           <q-input
             filled
-            v-model="loginForm.password"
+            v-model="registerForm.password"
             label="Password"
             type="password"
             :error="errors.password"
@@ -33,7 +44,7 @@
 
           <div>
             <q-btn
-              label="Login"
+              label="Register"
               type="submit"
               color="primary"
               class="full-width"
@@ -54,24 +65,24 @@
 </template>
 
 <script>
+import { RegisterService } from 'src/services/auth/RegisterService';
 
-import { LoginService } from 'src/services/auth/LoginService';
-
-
-const service = new LoginService();
+const service = new RegisterService();
 
 export default {
-  name: 'LoginPage',
+  name: 'RegisterPage',
 
   data() {
     return {
-      loginForm: {
+      registerForm: {
         username: '',
         password: '',
+        name: '',
       },
       errors: {
         username: false,
         password: false,
+        name: false,
       },
       progress: 50,
       loading: true,
@@ -83,10 +94,11 @@ export default {
 
   methods: {
     validateForm() {
-      this.errors.username = !this.loginForm.username;
-      this.errors.password = !this.loginForm.password;
+      this.errors.username = !this.registerForm.username;
+      this.errors.password = !this.registerForm.password;
+      this.errors.name = !this.registerForm.name;
 
-      return this.errors.username || this.errors.password ? false : true;
+      return this.errors.username || this.errors.password || this.errors.name ? false : true;
     },
 
     async onSubmit() {
@@ -97,9 +109,10 @@ export default {
         return;
       }
 
-      const response = await service.login(
-        this.loginForm.username,
-        this.loginForm.password
+      const response = await service.register(
+        this.registerForm.name,
+        this.registerForm.username,
+        this.registerForm.password
       );
 
       this.loading = false;
@@ -114,21 +127,21 @@ export default {
         return;
       }
 
-      this.$store.dispatch('auth/login', response.data.token);
-
       this.$q.notify({
         color: 'green-4',
         textColor: 'white',
         icon: 'done',
-        message: 'Usuário logado com sucesso!',
+        message: 'Usuário cadastrado com sucesso!',
       });
     },
 
     onReset() {
-      this.loginForm.username = '';
-      this.loginForm.password = '';
+      this.registerForm.username = '';
+      this.registerForm.password = '';
+      this.registerForm.name = '';
       this.errors.username = false;
       this.errors.password = false;
+      this.errors.name = false;
     },
   },
 };

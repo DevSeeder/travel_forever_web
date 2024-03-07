@@ -18,6 +18,7 @@ export class HttpService {
   }
 
   post(url: string, data: object | Array<unknown>, config = {}) {
+    console.log(data);
     return this.http.post(url, data, config);
   }
 }

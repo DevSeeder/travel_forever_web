@@ -7,29 +7,27 @@ export interface AuthResponse {
   token: string;
 }
 
-export class ClientAuthService extends HttpService {
-  constructor() {
-    super('http://auth.devseeder.com', {
-      projectKey: 'TRAVEL_FOREVER',
+export class ClientTravelForeverService extends HttpService {
+  constructor(token: string) {
+    super('http://api.travelforever.devseeder.com', {
+      Authorization: `Bearer ${token}`,
+    });
+    console.log({
+      Authorization: `Bearer ${token}`,
     });
   }
 
-  async login(
+  async createUser(
+    name: string,
     username: string,
     password: string
-  ): Promise<HttpResponseDto<AuthResponse>> {
+  ): Promise<HttpResponseDto<{ _id: string }>> {
     try {
-      const basicAuthToken = btoa(`${username}:${password}`);
-
-      const response = await this.post(
-        '/auth/login',
-        ['DEVSEEDER/TRAVEL_FOREVER/API/USER'],
-        {
-          headers: {
-            Authorization: `Basic ${basicAuthToken}`,
-          },
-        }
-      );
+      const response = await this.post('/users', {
+        name,
+        username,
+        password,
+      });
 
       return {
         success: true,
