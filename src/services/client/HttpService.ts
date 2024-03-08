@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance } from 'axios';
+import { HttpResponseDto } from 'src/dto/response/HttpResponseDto';
 
 export class HttpService {
   private http: AxiosInstance;
@@ -9,16 +10,50 @@ export class HttpService {
       headers: {
         'Content-type': 'application/json',
         ...headers,
-        // Inclua outros cabeçalhos globais necessários, como tokens de autenticação
       },
     });
   }
-  get(url: string, params = {}) {
-    return this.http.get(url, { params });
+
+  async get<Response>(
+    url: string,
+    params = {}
+  ): Promise<HttpResponseDto<Response>> {
+    try {
+      const response = await this.http.get(url, { params });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (err) {
+      return this.handleError(err);
+    }
   }
 
-  post(url: string, data: object | Array<unknown>, config = {}) {
-    console.log(data);
-    return this.http.post(url, data, config);
+  async post<Response>(
+    url: string,
+    data: object | Array<unknown>,
+    config = {}
+  ): Promise<HttpResponseDto<Response>> {
+    try {
+      const response = await this.http.post(url, data, config);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (err) {
+      return this.handleError(err);
+    }
+  }
+
+  private handleError(err: unknown) {
+    let message;
+    if (err instanceof AxiosError) {
+      if (err?.response?.data?.message) message = err?.response?.data?.message;
+      else message = err.message;
+    } else message = JSON.stringify(`Error: ${JSON.stringify(err)}`);
+    return {
+      success: false,
+      data: message,
+    };
   }
 }

@@ -1,0 +1,25 @@
+.q-table {
+  border-radius: 8px;
+  overflow: hidden; /* Garante que o arredondamento se aplique à tabela e não apenas ao container */
+}
+
+.q-table thead tr {
+  background-color: #1976d2 !important; /* Cor destacante para o cabeçalho */
+  color: white; /* Cor do texto */
+}
+
+.q-table thead th {
+  font-weight: bold;
+}
+
+.q-table tbody tr {
+  background-color: #f9f9f9; /* Cor de fundo levemente diferente para as linhas */
+}
+
+.q-table tbody tr:nth-of-type(odd) {
+  background-color: #ffffff; /* Alternância de cores para as linhas */
+}
+
+.q-table tbody tr:hover {
+  background-color: #e0f7fa; /* Cor de destaque ao passar o mouse */
+}

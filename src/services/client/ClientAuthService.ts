@@ -1,6 +1,5 @@
 import { HttpService } from './HttpService';
 import { HttpResponseDto } from 'src/dto/response/HttpResponseDto';
-import { AxiosError } from 'axios';
 
 export interface AuthResponse {
   userId: string;
@@ -18,34 +17,12 @@ export class ClientAuthService extends HttpService {
     username: string,
     password: string
   ): Promise<HttpResponseDto<AuthResponse>> {
-    try {
-      const basicAuthToken = btoa(`${username}:${password}`);
+    const basicAuthToken = btoa(`${username}:${password}`);
 
-      const response = await this.post(
-        '/auth/login',
-        ['DEVSEEDER/TRAVEL_FOREVER/API/USER'],
-        {
-          headers: {
-            Authorization: `Basic ${basicAuthToken}`,
-          },
-        }
-      );
-
-      return {
-        success: true,
-        data: response.data,
-      };
-    } catch (err) {
-      let message;
-      if (err instanceof AxiosError) {
-        if (err?.response?.data?.message)
-          message = err?.response?.data?.message;
-        else message = err.message;
-      } else message = JSON.stringify(`Error: ${JSON.stringify(err)}`);
-      return {
-        success: false,
-        data: message,
-      };
-    }
+    return this.post('/auth/login', ['DEVSEEDER/TRAVEL_FOREVER/API/USER'], {
+      headers: {
+        Authorization: `Basic ${basicAuthToken}`,
+      },
+    });
   }
 }
