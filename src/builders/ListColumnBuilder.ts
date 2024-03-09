@@ -1,5 +1,5 @@
 import { FieldSchema } from 'src/interface/schema/FieldSchema';
-import { ListColumn } from 'src/interface/ListColumn';
+import { ListColumn } from 'src/interface/components/ListColumn';
 
 export class ListColumnBuilder {
   static buildColumns(items: FieldSchema[]): ListColumn[] {

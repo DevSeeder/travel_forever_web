@@ -1,12 +1,14 @@
 import { storageService } from '../storage/StorageService';
 import { ListColumnBuilder } from 'src/builders/ListColumnBuilder';
-import { ListColumn } from 'src/interface/ListColumn';
+import { ListColumn } from 'src/interface/components/ListColumn';
 import { PaginatedResponse } from 'src/interface/PaginatedResponse';
 import { FormResponse } from 'src/interface/schema/FormResponse';
 import { ClientTravelForeverService } from '../client/ClientTravelForeverService';
 import store from 'src/store';
 import { FieldSchema } from 'src/interface/schema/FieldSchema';
-import { DateHelper } from 'src/helper/DateHelper';
+import { FormatOutputHelper } from 'src/helper/FormatOutputHelper';
+import { ListInputFilterBuilder } from 'src/builders/ListInputFilterBuilder';
+import { ListInputFilter } from 'src/interface/components/ListInputFilter';
 
 export class ListService<Item> {
   private clientService: ClientTravelForeverService;
@@ -20,36 +22,30 @@ export class ListService<Item> {
 
   async loadColumns(): Promise<ListColumn[]> {
     const fieldsData: FormResponse = await storageService.getValue(
-      `${this.entity}_form_search`,
-      `/${this.entity}/form/search`
+      `${this.entity}_fields`,
+      `/${this.entity}/form/fields`
     );
     this.fields = fieldsData.fields;
     return ListColumnBuilder.buildColumns(fieldsData.fields);
   }
 
-  async loadItems(): Promise<PaginatedResponse<Item>> {
-    const response = await this.clientService.search(this.entity);
-    response.data.items = this.formatOutputItems(response.data.items);
+  async loadItems(params = {}): Promise<PaginatedResponse<Item>> {
+    const response = await this.clientService.search(this.entity, params);
+    response.data.items = this.formatOutput(response.data.items);
     return response.data;
   }
 
-  formatOutputItems(items: Item[]): Item[] {
-    return items.map((item) => this.formatOutputItem(item));
+  async loadFilters(): Promise<ListInputFilter[]> {
+    const fieldsData: FormResponse = await storageService.getValue(
+      `${this.entity}_fields`,
+      `/${this.entity}/form/fields`
+    );
+    this.fields = fieldsData.fields;
+    return ListInputFilterBuilder.buildFilters(fieldsData.fields);
   }
 
-  formatOutputItem(item: Item): Item {
-    const output: Item = item;
-    this.fields.forEach((field) => {
-      if (!Object(item).hasOwnProperty([field.key]) || !field.key.length)
-        return;
-
-      switch (field.type) {
-        case 'date':
-        case 'datetime':
-          output[field.key] = DateHelper.formatDate(item[field.key]);
-          break;
-      }
-    });
-    return output;
+  private formatOutput(items: Item[]) {
+    const formatHelper = new FormatOutputHelper(this.fields);
+    return formatHelper.formatOutputItems(items);
   }
 }

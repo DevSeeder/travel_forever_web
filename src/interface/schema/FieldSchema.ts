@@ -6,5 +6,15 @@ export interface FieldSchema {
   hidden: boolean;
   order: number;
   orderBy: boolean;
-  grid: boolean;
+  grid?: boolean;
+  filter?: boolean;
+  allowed: {
+    search?: boolean;
+    update?: boolean;
+  };
+  translation: {
+    fieldLabel: string;
+    fieldPlaceholder: string;
+    fieldTooltip: string;
+  };
 }
