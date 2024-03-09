@@ -10,6 +10,24 @@ export class FormatOutputHelper<Item> {
 
   formatOutputItem(item) {
     const output = item;
+    const decimalFormat = new Intl.NumberFormat('pt-BR', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    let currencyFormat;
+    if (item['currency']['value']) {
+      try {
+        currencyFormat = new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: item['currency']['value'],
+        });
+      } catch (err) {
+        currencyFormat = decimalFormat;
+      }
+    }
+
     this.fields.forEach((field) => {
       if (!Object(item).hasOwnProperty([field.key]) || !field.key.length)
         return;
@@ -25,18 +43,9 @@ export class FormatOutputHelper<Item> {
         case 'decimal':
         case 'float':
         case 'double':
-          const decimalFormat = new Intl.NumberFormat('pt-BR', {
-            style: 'decimal',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
           output[field.key] = decimalFormat.format(item[field.key]);
           break;
         case 'currency':
-          const currencyFormat = new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-          });
           output[field.key] = currencyFormat.format(item[field.key]);
           break;
       }
