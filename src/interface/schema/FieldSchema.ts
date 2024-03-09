@@ -7,7 +7,10 @@ export interface FieldSchema {
   order: number;
   orderBy: boolean;
   grid?: boolean;
-  filter?: boolean;
+  filter?: {
+    direct: boolean;
+    operations: string[];
+  };
   allowed: {
     search?: boolean;
     update?: boolean;

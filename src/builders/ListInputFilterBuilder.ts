@@ -10,7 +10,9 @@ export class ListInputFilterBuilder {
 
   static buildFilter(item: FieldSchema): ListInputFilter {
     return {
-      key: item.key,
+      key: item.filter?.direct
+        ? item.key
+        : `${item.key}_${item.filter.operations[0]}`,
       label: item.translation.fieldLabel,
       type: item.type,
     };
