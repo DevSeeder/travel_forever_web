@@ -1,38 +1,40 @@
 <template>
   <q-layout>
     <q-drawer show-if-above v-model="leftDrawerOpen" side="left" bordered>
-      <!-- Conteúdo da Sidebar de Filtros -->
       <div class="filters-container q-pa-md">
-        <div
-          v-for="filter in filterFields"
-          :key="filter.key"
-          class="q-mr-md q-mb-md filter-field"
-        >
-          <q-input
-            v-if="filter.type === 'text'"
-            v-model="activeFilters[filter.key]"
-            :label="filter.label"
-            dense
-            class="custom-border"
-          />
-          <q-input
-            v-else-if="filter.type === 'date'"
-            v-model="activeFilters[filter.key]"
-            :label="filter.label"
-            dense
-            class="custom-border"
-            type="date"
-          />
-          <q-input
-            v-else-if="filter.type === 'number'"
-            v-model="activeFilters[filter.key]"
-            :label="filter.label"
-            dense
-            class="custom-border"
-            type="number"
-          />
+        <div class="filter-title">Filtros</div>
+        <div class="input-filter-container">
+          <div
+            v-for="filter in filterFields"
+            :key="filter.key"
+            class="q-mr-md q-mb-md filter-field"
+          >
+            <q-input
+              v-if="filter.type === 'text'"
+              v-model="activeFilters[filter.key]"
+              :label="filter.label"
+              dense
+              class="custom-border"
+            />
+            <q-input
+              v-else-if="filter.type === 'date'"
+              v-model="activeFilters[filter.key]"
+              :label="filter.label"
+              dense
+              class="custom-border"
+              type="date"
+            />
+            <q-input
+              v-else-if="filter.type === 'number'"
+              v-model="activeFilters[filter.key]"
+              :label="filter.label"
+              dense
+              class="custom-border"
+              type="number"
+            />
+          </div>
         </div>
-        <div class="q-mt-auto full-width-item btn-side-filter">
+        <div class="btn-side-filter btn-side-container">
           <q-btn
             class="q-mb-md full-width btn-side-filter"
             color="primary"
@@ -55,7 +57,7 @@
       <q-page class="q-pa-md">
         <q-btn
           fab
-          icon="menu"
+          icon="tune"
           @click="leftDrawerOpen = !leftDrawerOpen"
           class="q-mb-md"
         />

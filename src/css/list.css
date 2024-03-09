@@ -31,7 +31,10 @@
   max-width: 300px; /* Define a largura máxima da sidebar */
   display: flex;
   flex-direction: column;
-  height: 100%; /* Garante que o contêiner ocupe toda a altura da sidebar */
+  height: 100%;
+  /* max-height: 90vh;  */
+  /* overflow-y: auto;
+  overflow-x: hidden; */
 }
 
 .filter-field {
@@ -55,4 +58,36 @@
 
 .my-stretch-table td, .my-custom-cell {
   border-bottom: 1px solid #E0E0E0; /* Adiciona bordas verticais entre as células, se desejado */
+}
+
+.input-filter-container {
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 70%;
+}
+
+.btn-side-container{
+  margin-top: auto;
+}
+
+.filter-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  padding-bottom: 7px; /* Espaço extra para a sombra */
+  position: relative; /* Necessário para a sombra */
+  width: 100%;
+  text-align: left;
+}
+
+.filter-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px; /* Altura da "borda" */
+  background: rgb(155, 148, 148); /* Efeito suave */
+  /* Ajuste as cores e a opacidade conforme necessário */
 }

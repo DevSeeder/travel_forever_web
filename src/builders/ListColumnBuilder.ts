@@ -12,7 +12,7 @@ export class ListColumnBuilder {
     return {
       name: item.key,
       field: item.key,
-      label: item.label,
+      label: item.translation.fieldLabel,
       align: 'center',
       sortable: item.orderBy,
       headerClasses: 'my-custom-header',
