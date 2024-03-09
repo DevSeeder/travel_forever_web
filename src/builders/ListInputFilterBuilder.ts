@@ -3,16 +3,23 @@ import { ListInputFilter } from 'src/interface/components/ListInputFilter';
 
 export class ListInputFilterBuilder {
   static buildFilters(items: FieldSchema[]): ListInputFilter[] {
-    return items
+    const filters = [];
+    items
       .filter((item) => item?.filter)
-      .map((item) => ListInputFilterBuilder.buildFilter(item));
+      .forEach((item) =>
+        ListInputFilterBuilder.buildFilter(item).forEach((op) =>
+          filters.push(op)
+        )
+      );
+
+    console.log('filters');
+    console.log(filters);
+
+    return filters;
   }
 
-  static buildFilter(item: FieldSchema): ListInputFilter {
-    return {
-      key: item.filter?.direct
-        ? item.key
-        : `${item.key}_${item.filter.operations[0]}`,
+  static buildFilter(item: FieldSchema): ListInputFilter[] {
+    const filter = {
       label: item.translation.fieldLabel,
       type: item.type,
       options:
@@ -23,5 +30,61 @@ export class ListInputFilterBuilder {
             }))
           : [],
     };
+
+    const filters = [];
+
+    if (item.filter.direct) {
+      filters.push({ ...filter, key: item.key });
+    }
+
+    if (!item.filter?.operations || !item.filter.operations.length)
+      return filters;
+
+    item.filter.operations.forEach((op) => {
+      ListInputFilterBuilder.buildOperationFilter(
+        item,
+        filter,
+        op,
+        item.filter.operations.length
+      ).forEach((opf) => filters.push(opf));
+    });
+
+    return filters;
+  }
+
+  static buildOperationFilter(
+    item: FieldSchema,
+    filter: Partial<ListInputFilter>,
+    operation: string,
+    lenght: number
+  ): ListInputFilter[] {
+    if (operation === 'between') {
+      return [
+        {
+          ...filter,
+          label: `${item.translation.fieldLabel} de Início`,
+          type: item.type,
+          key: `${item.key}_start`,
+        },
+        {
+          ...filter,
+          label: `${item.translation.fieldLabel} de Fim`,
+          type: item.type,
+          key: `${item.key}_end`,
+        },
+      ];
+    }
+
+    return [
+      {
+        ...filter,
+        label:
+          lenght > 1 || item.filter.direct
+            ? `${item.translation.fieldLabel} ${operation}`
+            : item.translation.fieldLabel,
+        type: item.type,
+        key: `${item.key}_${operation}`,
+      },
+    ];
   }
 }

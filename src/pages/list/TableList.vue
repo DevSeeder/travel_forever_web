@@ -10,7 +10,7 @@
             class="q-mr-md q-mb-md filter-field"
           >
             <q-input
-              v-if="['text'].includes(filter.type)"
+              v-if="['text', 'currency'].includes(filter.type)"
               v-model="activeFilters[filter.key]"
               :label="filter.label"
               dense
@@ -186,14 +186,13 @@ export default defineComponent({
       let filterParams = {};
       Object.keys(activeFilters.value).forEach((key) => {
         if (!activeFilters.value[key]) return;
-        if (Object.keys(activeFilters.value[key]).length) {
+        if (typeof activeFilters.value[key] == 'object') {
           filterParams[key] = activeFilters.value[key]['value'];
           return;
         }
         filterParams[key] = activeFilters.value[key];
       });
       console.log(filterParams);
-
       await loadItems(filterParams);
       $q.loading.hide();
     }

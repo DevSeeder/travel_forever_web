@@ -22,6 +22,23 @@ export class FormatOutputHelper<Item> {
         case 'externalId':
           output[field.key] = item[field.key]['value'];
           break;
+        case 'decimal':
+        case 'float':
+        case 'double':
+          const decimalFormat = new Intl.NumberFormat('pt-BR', {
+            style: 'decimal',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+          output[field.key] = decimalFormat.format(item[field.key]);
+          break;
+        case 'currency':
+          const currencyFormat = new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          });
+          output[field.key] = currencyFormat.format(item[field.key]);
+          break;
       }
     });
     return output;

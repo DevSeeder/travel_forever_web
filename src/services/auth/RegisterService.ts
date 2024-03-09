@@ -28,7 +28,6 @@ export class RegisterService {
     if (!resRegister.success) return resRegister;
 
     const resLogin = await this.loginService.login(username, password);
-    console.log(resLogin);
 
     if (!resLogin.success)
       return { success: false, data: resLogin.data as HttpErrorResponseDto };

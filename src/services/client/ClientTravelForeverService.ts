@@ -11,9 +11,6 @@ export class ClientTravelForeverService extends HttpService {
     super('http://api.travelforever.devseeder.com', {
       Authorization: `Bearer ${token}`,
     });
-    console.log({
-      Authorization: `Bearer ${token}`,
-    });
   }
 
   async createUser(
