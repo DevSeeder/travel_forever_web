@@ -1,6 +1,5 @@
 .q-table {
   border-radius: 8px;
-  overflow: hidden; /* Garante que o arredondamento se aplique à tabela e não apenas ao container */
 }
 
 .q-table thead tr {
@@ -24,6 +23,13 @@
   background-color: #e0f7fa; /* Cor de destaque ao passar o mouse */
 }
 
+.custom-border {
+  border: 1px solid #e0e0e0; /* Cor da borda */
+  border-radius: 4px; /* Arredondamento da borda */
+  padding: 4px; /* Espaçamento interno para que o conteúdo não fique muito próximo da borda */
+}
+
+/*** FILTER ***/
 .filters-container {
   display: flex;
   flex-wrap: wrap;
@@ -46,20 +52,6 @@
   margin-right: auto;
 }
 
-.custom-border {
-  border: 1px solid #E0E0E0; /* Cor da borda */
-  border-radius: 4px; /* Arredondamento da borda */
-  padding: 4px; /* Espaçamento interno para que o conteúdo não fique muito próximo da borda */
-}
-
-.my-stretch-table {
-  height: calc(100vh - 100px); /* Ajuste 20px conforme necessário */
-}
-
-.my-stretch-table td, .my-custom-cell {
-  border-bottom: 1px solid #E0E0E0; /* Adiciona bordas verticais entre as células, se desejado */
-}
-
 .input-filter-container {
   width: 100%;
   overflow-y: auto;
@@ -67,7 +59,7 @@
   max-height: 70%;
 }
 
-.btn-side-container{
+.btn-side-container {
   margin-top: auto;
 }
 
@@ -90,4 +82,23 @@
   height: 1px; /* Altura da "borda" */
   background: rgb(155, 148, 148); /* Efeito suave */
   /* Ajuste as cores e a opacidade conforme necessário */
+}
+
+/*************************************/
+
+.my-stretch-table {
+  height: calc(100vh - 100px);
+}
+
+thead tr th {
+  position: sticky;
+  z-index: 1;
+}
+/* this will be the loading indicator */
+thead tr:last-child th {
+  /* height of all previous header rows */
+  top: 48px;
+}
+thead tr:first-child th {
+  top: 0;
 }

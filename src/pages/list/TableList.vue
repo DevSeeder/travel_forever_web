@@ -62,12 +62,17 @@
           class="q-mb-md"
         />
         <q-table
-          :rows="trips"
+          :rows="items"
           :columns="columns"
           row-key="id"
           :loading="loading"
-          class="my-stretch-table"
-        />
+          v-model:pagination="pagination"
+          @request="onRequest"
+          class="my-stretch-table fixed-header-table"
+          flat
+          bordered
+        >
+        </q-table>
       </q-page>
     </q-page-container>
   </q-layout>
@@ -80,39 +85,51 @@ import { ListService } from 'src/services/pages/ListService';
 import { ListColumn } from 'src/interface/components/ListColumn';
 import 'src/css/list.css';
 import { ListInputFilter } from 'src/interface/components/ListInputFilter';
-
-interface Trip {
-  name: string;
-  startDate: string;
-  endDate: string;
-}
-
-const service = new ListService<Trip>('travels');
+import { DEFAULT_ORDER_MODE, DEFAULT_PAGE_SIZE } from 'src/app.constants';
 
 export default defineComponent({
-  setup() {
+  props: {
+    entity: {
+      type: String,
+      required: true,
+    },
+  },
+
+  setup(props) {
+    const service = new ListService(props.entity);
+
     const $q = useQuasar();
     const leftDrawerOpen = ref(false);
     const filterFields = ref<ListInputFilter[]>([]);
     const activeFilters = ref({});
-    const trips = ref<Trip[]>([]);
+    const items = ref<[]>([]);
     const columns = ref<ListColumn[]>([]);
     const loading = ref(false);
     const pagination = ref({
       sortBy: 'startDate',
-      descending: false,
+      descending: DEFAULT_ORDER_MODE == 'DESC',
       page: 1,
-      rowsPerPage: 10,
+      rowsPerPage: DEFAULT_PAGE_SIZE,
+      rowsNumber: 0,
     });
 
     async function loadItems(params = {}) {
+      params = {
+        ...params,
+        page: pagination.value.page,
+        pageSize: pagination.value.rowsPerPage,
+        // sortBy: pagination.value.sortBy,
+        // descending: pagination.value.descending ? 'true' : 'false',
+      };
+
       const response = await service.loadItems(params);
-      trips.value = [...response.items];
+      items.value = [...response.items] as [];
       pagination.value = {
-        sortBy: 'startDate',
-        descending: false,
+        sortBy: pagination.value.sortBy,
+        descending: pagination.value.descending,
         page: response.meta.currentPage,
-        rowsPerPage: 10,
+        rowsPerPage: pagination.value.rowsPerPage,
+        rowsNumber: response.meta.totalRecords,
       };
     }
 
@@ -122,6 +139,20 @@ export default defineComponent({
 
     async function loadFilters() {
       filterFields.value = await service.loadFilters();
+    }
+
+    async function onRequest(props) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination;
+      // Atualize seu objeto de paginação aqui
+      pagination.value = {
+        ...pagination.value,
+        page,
+        rowsPerPage,
+        sortBy,
+        descending,
+      };
+      // Carregue os itens com os novos parâmetros de paginação
+      applyFilters();
     }
 
     // Usando onMounted para chamar funções assíncronas após o componente ser montado
@@ -162,7 +193,7 @@ export default defineComponent({
     }
 
     return {
-      trips,
+      items,
       filterFields,
       pagination,
       columns,
@@ -171,6 +202,7 @@ export default defineComponent({
       applyFilters,
       resetFilters,
       leftDrawerOpen,
+      onRequest,
     };
   },
 });

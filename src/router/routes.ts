@@ -3,10 +3,16 @@ import { RouteRecordRaw } from 'vue-router';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: () => import('pages/travels/TravelList.vue'),
-    children: [
-      { path: '', component: () => import('pages/travels/TravelList.vue') },
-    ],
+    component: () => import('pages/list/TableList.vue'),
+    props: {
+      entity: 'travels',
+    },
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/list/:entity',
+    component: () => import('pages/list/TableList.vue'),
+    props: true,
     meta: { requiresAuth: true },
   },
   // Adicione esta linha
