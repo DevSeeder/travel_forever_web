@@ -20,4 +20,8 @@ export interface FieldSchema {
     fieldPlaceholder: string;
     fieldTooltip: string;
   };
+  values?: {
+    _id: string;
+    name: string;
+  }[];
 }

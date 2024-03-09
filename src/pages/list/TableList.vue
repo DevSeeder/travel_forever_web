@@ -10,7 +10,7 @@
             class="q-mr-md q-mb-md filter-field"
           >
             <q-input
-              v-if="filter.type === 'text'"
+              v-if="['text'].includes(filter.type)"
               v-model="activeFilters[filter.key]"
               :label="filter.label"
               dense
@@ -29,9 +29,17 @@
               v-model="activeFilters[filter.key]"
               :label="filter.label"
               dense
-              class="custom-border"
               type="number"
             />
+            <q-select
+              v-else-if="filter.type === 'externalId'"
+              v-model="activeFilters[filter.key]"
+              :options="filter.options"
+              :label="filter.label"
+              outlined
+              class="custom-border"
+              @input="applyFilters"
+            ></q-select>
           </div>
         </div>
         <div class="btn-side-filter btn-side-container">
@@ -178,6 +186,10 @@ export default defineComponent({
       let filterParams = {};
       Object.keys(activeFilters.value).forEach((key) => {
         if (!activeFilters.value[key]) return;
+        if (Object.keys(activeFilters.value[key]).length) {
+          filterParams[key] = activeFilters.value[key]['value'];
+          return;
+        }
         filterParams[key] = activeFilters.value[key];
       });
       console.log(filterParams);

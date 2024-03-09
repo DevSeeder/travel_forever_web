@@ -15,6 +15,13 @@ export class ListInputFilterBuilder {
         : `${item.key}_${item.filter.operations[0]}`,
       label: item.translation.fieldLabel,
       type: item.type,
+      options:
+        item.type == 'externalId' && item.values
+          ? item.values.map((item) => ({
+              label: item.name,
+              value: item._id,
+            }))
+          : [],
     };
   }
 }

@@ -19,6 +19,9 @@ export class FormatOutputHelper<Item> {
         case 'datetime':
           output[field.key] = DateHelper.formatDate(item[field.key]);
           break;
+        case 'externalId':
+          output[field.key] = item[field.key]['value'];
+          break;
       }
     });
     return output;
