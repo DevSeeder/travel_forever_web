@@ -11,15 +11,12 @@ export class ListInputFilterBuilder {
           filters.push(op)
         )
       );
-
     console.log('filters');
     console.log(filters);
-
     return filters;
   }
 
   static buildFilter(item: FieldSchema): ListInputFilter[] {
-    console.log(item.values);
     const filter = {
       label: item.translation.fieldLabel,
       type: item.type,

@@ -110,18 +110,25 @@
           class="my-stretch-table fixed-header-table"
           flat
           bordered
+          :rows-per-page-options="[5, 10, 20]"
         >
+          <template v-slot:bottom>
+            <div class="q-pa-md flex justify-between" style="width: 100%">
+              <q-pagination
+                v-model="pagination.page"
+                :max="totalPages"
+                @update:model-value="setPage"
+              ></q-pagination>
+              <q-select
+                v-model="pagination.rowsPerPage"
+                :options="rowsPerPageOptions"
+                dense
+                style="width: 100px"
+                @update:model-value="updateRowsPerPage"
+              ></q-select>
+            </div>
+          </template>
         </q-table>
-        <div class="q-mt-md flex justify-center">
-          <q-btn
-            v-for="n in totalPages"
-            :key="n"
-            :label="n"
-            flat
-            @click="setPage(n)"
-            :disable="pagination.page === n"
-          />
-        </div>
       </q-page>
     </q-page-container>
   </q-layout>
@@ -155,6 +162,14 @@ export default defineComponent({
     const columns = ref<ListColumn[]>([]);
     const loading = ref(false);
     const totalPages = ref(0);
+    const rowsPerPageOptions = [
+      { label: '5', value: 5 },
+      { label: '10', value: 10 },
+      { label: '15', value: 15 },
+      { label: '20', value: 20 },
+      { label: '30', value: 30 },
+      { label: '50', value: 50 },
+    ];
 
     const pagination = ref({
       sortBy: null,
@@ -296,6 +311,7 @@ export default defineComponent({
       onRequest,
       applyBooleanFilters,
       totalPages,
+      rowsPerPageOptions,
     };
   },
 
@@ -336,26 +352,16 @@ export default defineComponent({
     },
 
     toggleSelection(filterKey, option) {
-      console.log('toggleSelection');
-      if (!this.activeFilters[filterKey]) {
-        this.activeFilters[filterKey] = [];
-      }
-      console.log(this.activeFilters[filterKey]);
-
+      if (!this.activeFilters[filterKey]) this.activeFilters[filterKey] = [];
       const index = this.activeFilters[filterKey].indexOf(option);
+      if (index === -1) this.activeFilters[filterKey].push(option);
+      else this.activeFilters[filterKey].splice(index, 1);
+    },
 
-      console.log('index');
-      console.log(index);
-
-      if (index === -1) {
-        this.activeFilters[filterKey].push(option);
-      } else {
-        this.activeFilters[filterKey].splice(index, 1);
-      }
-
-      console.log([...this.activeFilters[filterKey]]);
-
-      this.activeFilters[filterKey] = [...this.activeFilters[filterKey]];
+    updateRowsPerPage(rowsPerPage) {
+      this.pagination.rowsPerPage = rowsPerPage.value;
+      this.pagination.page = 1;
+      this.applyFilters();
     },
   },
 });
