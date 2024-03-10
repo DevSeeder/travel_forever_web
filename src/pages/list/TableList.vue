@@ -37,6 +37,7 @@
               :options="filter.options"
               :label="filter.label"
               outlined
+              multiple
               class="custom-border"
               @input="applyFilters"
             ></q-select>
@@ -44,8 +45,12 @@
               v-else-if="filter.type === 'boolean'"
               v-model="activeFilters[filter.key]"
               :label="filter.label"
+              :disable="getDisableBoolean(filter.key)"
+              true
               color="blue"
-              @update:model-value="applyFilters"
+              @update:model-value="
+                (value) => applyBooleanFilters(filter.key, value)
+              "
             />
           </div>
         </div>
@@ -192,13 +197,21 @@ export default defineComponent({
       $q.loading.show();
       let filterParams = {};
       Object.keys(activeFilters.value).forEach((key) => {
-        if (!activeFilters.value[key]) return;
+        if (
+          !activeFilters.value[key] ||
+          (Array.isArray(activeFilters.value[key]) &&
+            !activeFilters.value[key].length)
+        )
+          return;
         if (typeof activeFilters.value[key] == 'object') {
-          filterParams[key] = activeFilters.value[key]['value'];
+          filterParams[key] = activeFilters.value[key]
+            .map((field) => field.value)
+            .join(',');
           return;
         }
         filterParams[key] = activeFilters.value[key];
       });
+      console.log('filterParams');
       console.log(filterParams);
       await loadItems(filterParams);
       $q.loading.hide();
@@ -206,8 +219,26 @@ export default defineComponent({
 
     function resetFilters() {
       Object.keys(activeFilters.value).forEach((key) => {
-        activeFilters.value[key] = '';
+        const filter = filterFields.value.find((f) => f.key === key);
+        if (filter && filter.type === 'externalId')
+          activeFilters.value[key] = [];
+        else activeFilters.value[key] = '';
       });
+    }
+
+    function getOpositeKey(key: string): string {
+      return key.endsWith('_ne') ? key.replace('_ne', '') : `${key}_ne`;
+    }
+
+    async function applyBooleanFilters(key: string, value: boolean) {
+      const oppositeKey = getOpositeKey(key);
+
+      if (value === true) {
+        activeFilters.value[key] = true;
+        activeFilters.value[oppositeKey] = false;
+      } else activeFilters.value[key] = false;
+
+      await applyFilters();
     }
 
     return {
@@ -221,7 +252,17 @@ export default defineComponent({
       resetFilters,
       leftDrawerOpen,
       onRequest,
+      applyBooleanFilters,
     };
+  },
+
+  methods: {
+    getDisableBoolean(key: string): boolean {
+      const oppositeKey = key.endsWith('_ne')
+        ? key.replace('_ne', '')
+        : `${key}_ne`;
+      return this.activeFilters[oppositeKey] === true;
+    },
   },
 });
 </script>
