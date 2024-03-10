@@ -93,6 +93,16 @@
           bordered
         >
         </q-table>
+        <div class="q-mt-md flex justify-center">
+          <q-btn
+            v-for="n in totalPages"
+            :key="n"
+            :label="n"
+            flat
+            @click="setPage(n)"
+            :disable="pagination.page === n"
+          />
+        </div>
       </q-page>
     </q-page-container>
   </q-layout>
@@ -125,6 +135,7 @@ export default defineComponent({
     const items = ref<[]>([]);
     const columns = ref<ListColumn[]>([]);
     const loading = ref(false);
+    const totalPages = ref(0);
 
     const pagination = ref({
       sortBy: null,
@@ -265,7 +276,23 @@ export default defineComponent({
       leftDrawerOpen,
       onRequest,
       applyBooleanFilters,
+      totalPages,
     };
+  },
+
+  watch: {
+    'pagination.rowsPerPage': {
+      immediate: true,
+      handler() {
+        this.calculateTotalPages();
+      },
+    },
+    'pagination.rowsNumber': {
+      immediate: true,
+      handler() {
+        this.calculateTotalPages();
+      },
+    },
   },
 
   methods: {
@@ -274,6 +301,19 @@ export default defineComponent({
         ? key.replace('_ne', '')
         : `${key}_ne`;
       return this.activeFilters[oppositeKey] === true;
+    },
+
+    calculateTotalPages() {
+      if (!this.pagination.rowsNumber) return 0;
+
+      this.totalPages = Math.ceil(
+        this.pagination.rowsNumber / this.pagination.rowsPerPage
+      );
+    },
+
+    setPage(pageNumber) {
+      this.pagination.page = pageNumber;
+      this.applyFilters();
     },
   },
 });
