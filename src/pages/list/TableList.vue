@@ -17,7 +17,7 @@
               class="custom-border"
             />
             <q-input
-              v-else-if="filter.type === 'date'"
+              v-else-if="['date', 'datetime'].includes(filter.type)"
               v-model="activeFilters[filter.key]"
               :label="filter.label"
               dense
@@ -40,6 +40,13 @@
               class="custom-border"
               @input="applyFilters"
             ></q-select>
+            <q-toggle
+              v-else-if="filter.type === 'boolean'"
+              v-model="activeFilters[filter.key]"
+              :label="filter.label"
+              color="blue"
+              @update:model-value="applyFilters"
+            />
           </div>
         </div>
         <div class="btn-side-filter btn-side-container">

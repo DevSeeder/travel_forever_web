@@ -35,6 +35,15 @@ export class ListInputFilterBuilder {
 
     if (item.filter.direct) {
       filters.push({ ...filter, key: item.key });
+
+      if (item.type === 'boolean') {
+        filters.push({
+          ...filter,
+          label: `Somente Não ${item.translation.fieldLabel}`,
+          type: item.type,
+          key: `${item.key}_ne`,
+        });
+      }
     }
 
     if (!item.filter?.operations || !item.filter.operations.length)

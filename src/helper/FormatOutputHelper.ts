@@ -17,7 +17,7 @@ export class FormatOutputHelper<Item> {
     });
 
     let currencyFormat;
-    if (item['currency']['value']) {
+    if (item['currency'] && item['currency']['value']) {
       try {
         currencyFormat = new Intl.NumberFormat('pt-BR', {
           style: 'currency',
@@ -31,11 +31,18 @@ export class FormatOutputHelper<Item> {
     this.fields.forEach((field) => {
       if (!Object(item).hasOwnProperty([field.key]) || !field.key.length)
         return;
-
       switch (field.type) {
         case 'date':
+          output[field.key] = DateHelper.formatDate(
+            item[field.key],
+            'DD/MM/YYYY'
+          );
+          break;
         case 'datetime':
-          output[field.key] = DateHelper.formatDate(item[field.key]);
+          output[field.key] = DateHelper.formatDate(
+            item[field.key],
+            'DD/MM/YYYY HH:mm'
+          );
           break;
         case 'externalId':
           output[field.key] = item[field.key]['value'];
