@@ -125,8 +125,9 @@ export default defineComponent({
     const items = ref<[]>([]);
     const columns = ref<ListColumn[]>([]);
     const loading = ref(false);
+
     const pagination = ref({
-      sortBy: 'startDate',
+      sortBy: null,
       descending: DEFAULT_ORDER_MODE == 'DESC',
       page: 1,
       rowsPerPage: DEFAULT_PAGE_SIZE,
@@ -138,8 +139,8 @@ export default defineComponent({
         ...params,
         page: pagination.value.page,
         pageSize: pagination.value.rowsPerPage,
-        // sortBy: pagination.value.sortBy,
-        // descending: pagination.value.descending ? 'true' : 'false',
+        orderBy: pagination.value.sortBy,
+        orderMode: pagination.value?.descending ? -1 : 1,
       };
 
       const response = await service.loadItems(params);
@@ -155,6 +156,17 @@ export default defineComponent({
 
     async function loadColumns() {
       columns.value = await service.loadColumns();
+      const metaList = await service.loadMeta();
+      pagination.value = {
+        sortBy: metaList.metaList?.defaultOrderField || null,
+        descending: metaList.metaList?.defaultOrderMode
+          ? metaList.metaList?.defaultOrderMode == 'DESC'
+          : pagination.value.descending,
+        page: 1,
+        rowsPerPage:
+          metaList.metaList?.defaultPageSize || pagination.value.rowsPerPage,
+        rowsNumber: 0,
+      };
     }
 
     async function loadFilters() {

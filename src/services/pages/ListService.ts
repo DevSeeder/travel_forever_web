@@ -2,7 +2,7 @@ import { storageService } from '../storage/StorageService';
 import { ListColumnBuilder } from 'src/builders/ListColumnBuilder';
 import { ListColumn } from 'src/interface/components/ListColumn';
 import { PaginatedResponse } from 'src/interface/PaginatedResponse';
-import { FormResponse } from 'src/interface/schema/FormResponse';
+import { EntitySchema, FormResponse } from 'src/interface/schema/FormResponse';
 import { ClientTravelForeverService } from '../client/ClientTravelForeverService';
 import store from 'src/store';
 import { FieldSchema } from 'src/interface/schema/FieldSchema';
@@ -27,6 +27,14 @@ export class ListService<Item> {
     );
     this.fields = fieldsData.fields;
     return ListColumnBuilder.buildColumns(fieldsData.fields);
+  }
+
+  async loadMeta(): Promise<EntitySchema> {
+    const metaData: FormResponse = await storageService.getValue(
+      `${this.entity}_fields`,
+      `/${this.entity}/form/fields`
+    );
+    return metaData.entityRefs;
   }
 
   async loadItems(params = {}): Promise<PaginatedResponse<Item>> {
