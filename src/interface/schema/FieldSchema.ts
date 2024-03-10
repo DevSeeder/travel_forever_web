@@ -23,5 +23,9 @@ export interface FieldSchema {
   values?: {
     _id: string;
     name: string;
+    icon?: {
+      type: string;
+      value: string;
+    };
   }[];
 }

@@ -19,6 +19,7 @@ export class ListInputFilterBuilder {
   }
 
   static buildFilter(item: FieldSchema): ListInputFilter[] {
+    console.log(item.values);
     const filter = {
       label: item.translation.fieldLabel,
       type: item.type,
@@ -27,6 +28,7 @@ export class ListInputFilterBuilder {
           ? item.values.map((item) => ({
               label: item.name,
               value: item._id,
+              icon: item?.icon?.value,
             }))
           : [],
     };
@@ -67,6 +69,8 @@ export class ListInputFilterBuilder {
     operation: string,
     lenght: number
   ): ListInputFilter[] {
+    if (item.type === 'externalId' && operation == 'in') return [];
+
     if (operation === 'between') {
       return [
         {

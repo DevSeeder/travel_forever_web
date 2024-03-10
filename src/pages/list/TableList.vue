@@ -39,8 +39,27 @@
               outlined
               multiple
               class="custom-border"
-              @input="applyFilters"
-            ></q-select>
+              use-chips
+            >
+              <template v-slot:option="scope">
+                <q-item
+                  :clickable="true"
+                  :class="{
+                    'selected-item':
+                      activeFilters[filter.key] &&
+                      activeFilters[filter.key].includes(scope.opt.value),
+                  }"
+                  @click="toggleSelection(filter.key, scope.opt)"
+                >
+                  <q-item-section>
+                    {{ scope.opt.label }}
+                  </q-item-section>
+                  <q-item-section avatar>
+                    <q-icon :name="scope.opt.icon" />
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
             <q-toggle
               v-else-if="filter.type === 'boolean'"
               v-model="activeFilters[filter.key]"
@@ -315,9 +334,29 @@ export default defineComponent({
       this.pagination.page = pageNumber;
       this.applyFilters();
     },
+
+    toggleSelection(filterKey, option) {
+      console.log('toggleSelection');
+      if (!this.activeFilters[filterKey]) {
+        this.activeFilters[filterKey] = [];
+      }
+      console.log(this.activeFilters[filterKey]);
+
+      const index = this.activeFilters[filterKey].indexOf(option);
+
+      console.log('index');
+      console.log(index);
+
+      if (index === -1) {
+        this.activeFilters[filterKey].push(option);
+      } else {
+        this.activeFilters[filterKey].splice(index, 1);
+      }
+
+      console.log([...this.activeFilters[filterKey]]);
+
+      this.activeFilters[filterKey] = [...this.activeFilters[filterKey]];
+    },
   },
 });
 </script>
-
-<style scoped></style>
-src/interface/components/ListColumn

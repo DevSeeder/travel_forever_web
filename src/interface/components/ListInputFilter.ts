@@ -5,5 +5,6 @@ export interface ListInputFilter {
   options?: {
     label: string;
     value: string;
+    icon?: string;
   }[];
 }
