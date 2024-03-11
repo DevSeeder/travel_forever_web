@@ -132,11 +132,11 @@ thead tr:first-child th {
   background: black;
 }
 
-.q-table tr:last-child {
+tr:has(.q-tr--totals) {
   position: sticky;
   bottom: 0;
-  background: beige; /* ou qualquer outra cor de fundo que você deseja */
-  z-index: 1; /* para garantir que fique acima do conteúdo da rolagem */
+  background: beige !important;
+  z-index: 1;
 }
 
 .q-table td {

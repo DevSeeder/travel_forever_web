@@ -268,7 +268,6 @@ export default defineComponent({
 
     async function onRequest(props) {
       const { page, rowsPerPage, sortBy, descending } = props.pagination;
-      // Atualize seu objeto de paginação aqui
       pagination.value = {
         ...pagination.value,
         page,
@@ -276,11 +275,9 @@ export default defineComponent({
         sortBy,
         descending,
       };
-      // Carregue os itens com os novos parâmetros de paginação
       applyFilters();
     }
 
-    // Usando onMounted para chamar funções assíncronas após o componente ser montado
     onMounted(async () => {
       $q.loading.show();
       try {
@@ -390,14 +387,16 @@ export default defineComponent({
 
   methods: {
     calculateTotals() {
+      if (!this.columns.find((col) => col.type === 'currency')) return;
+
       const newTotalsRow = { ...this.totalsRow };
-      this.columns.forEach((col, index) => {
+      this.columns.forEach((col) => {
         if (col.type !== 'currency') {
           newTotalsRow[col.name] = '';
           return;
         }
 
-        const calcTotalCol = this.calculateTotalForColumn(col.name, index);
+        const calcTotalCol = this.calculateTotalForColumn(col.name);
         this.setSelectedCurrency(
           {
             label: `${calcTotalCol[0].totalValue} (${calcTotalCol[0].currency})`,
