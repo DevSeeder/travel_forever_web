@@ -132,13 +132,7 @@
                   dense
                   outlined
                 >
-                  <q-tooltip
-                    style="
-                      font-size: 14px;
-                      font-weight: bold;
-                      background: black;
-                    "
-                  >
+                  <q-tooltip class="select-tooltip">
                     Totais por moeda
                   </q-tooltip>
                   <template v-slot:option="scope">
@@ -167,7 +161,11 @@
                 dense
                 style="width: 100px"
                 @update:model-value="updateRowsPerPage"
-              ></q-select>
+              >
+                <q-tooltip class="select-tooltip">
+                  Registros por Página
+                </q-tooltip>
+              </q-select>
             </div>
           </template>
         </q-table>
@@ -207,13 +205,14 @@ export default defineComponent({
     const loading = ref(false);
     const totalPages = ref(0);
     const gridTemplateColumns = ref([]);
+    const recordsPerPage = ' Registros por Página';
     const rowsPerPageOptions = [
-      { label: '5', value: 5 },
-      { label: '10', value: 10 },
-      { label: '15', value: 15 },
-      { label: '20', value: 20 },
-      { label: '30', value: 30 },
-      { label: '50', value: 50 },
+      { label: `5 ${recordsPerPage}`, value: 5 },
+      { label: `10 ${recordsPerPage}`, value: 10 },
+      { label: `15 ${recordsPerPage}`, value: 15 },
+      { label: `20 ${recordsPerPage}`, value: 20 },
+      { label: `30 ${recordsPerPage}`, value: 30 },
+      { label: `50 ${recordsPerPage}`, value: 50 },
     ];
 
     const pagination = ref({
@@ -373,7 +372,7 @@ export default defineComponent({
       const colWidths = getColWidths();
       gridTemplateColumns.value = colWidths.map((col, i) => {
         return {
-          width: col,
+          width: columns.value[i].type == 'currency' ? 'min-content' : col,
           index: i,
           type: columns.value[i].type,
           totalsContent:

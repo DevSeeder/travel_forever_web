@@ -123,17 +123,27 @@ thead tr:first-child th {
 /****       -TOTAIS-     ******/
 .totals-container {
   display: flex;
-  background-color: #fff; /* ou a cor de fundo da sua tabela */
+  background-color: #fff;
+  margin-left: -16px;
+  width: -webkit-fill-available;
+  border-bottom: 1px solid rgb(209, 209, 183);
+  padding: 10px;
 }
 
 .total {
   flex: 1;
   text-align: center;
-  padding-top: 7px;
+
   min-width: min-content;
 }
 
 .total-currency,
 .q-field__native.row.items-center span {
   font-weight: bold;
+}
+
+.select-tooltip {
+  font-size: 14px;
+  font-weight: bold;
+  background: black;
 }
