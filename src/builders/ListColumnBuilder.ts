@@ -17,6 +17,7 @@ export class ListColumnBuilder {
       sortable: item.orderBy,
       headerClasses: 'my-custom-header',
       classes: 'my-custom-cell',
+      type: item.type,
     };
   }
 }

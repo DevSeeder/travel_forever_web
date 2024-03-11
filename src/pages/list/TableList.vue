@@ -113,6 +113,19 @@
           :rows-per-page-options="[5, 10, 20]"
         >
           <template v-slot:bottom>
+            <div class="totals-container">
+              <div
+                class="total my-custom-cell total-cell"
+                v-for="column in gridTemplateColumns"
+                :style="`min-width:${column.width};`"
+                :key="column.index"
+              >
+                <span class="total-currency" v-if="column.type == 'currency'">
+                  Total: </span
+                ><br />
+                {{ column.content }}
+              </div>
+            </div>
             <div class="q-pa-md flex justify-between" style="width: 100%">
               <q-pagination
                 v-model="pagination.page"
@@ -135,13 +148,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue';
+import { defineComponent, nextTick, onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { ListService } from 'src/services/pages/ListService';
 import { ListColumn } from 'src/interface/components/ListColumn';
 import 'src/css/list.css';
 import { ListInputFilter } from 'src/interface/components/ListInputFilter';
 import { DEFAULT_ORDER_MODE, DEFAULT_PAGE_SIZE } from 'src/app.constants';
+import { FormatOutputHelper } from 'src/helper/FormatOutputHelper';
 
 export default defineComponent({
   props: {
@@ -162,6 +176,7 @@ export default defineComponent({
     const columns = ref<ListColumn[]>([]);
     const loading = ref(false);
     const totalPages = ref(0);
+    const gridTemplateColumns = ref([]);
     const rowsPerPageOptions = [
       { label: '5', value: 5 },
       { label: '10', value: 10 },
@@ -197,6 +212,8 @@ export default defineComponent({
         rowsPerPage: pagination.value.rowsPerPage,
         rowsNumber: response.meta.totalRecords,
       };
+
+      generateGridTemplateColumns();
     }
 
     async function loadColumns() {
@@ -268,8 +285,6 @@ export default defineComponent({
         }
         filterParams[key] = activeFilters.value[key];
       });
-      console.log('filterParams');
-      console.log(filterParams);
       await loadItems(filterParams);
       $q.loading.hide();
     }
@@ -298,6 +313,50 @@ export default defineComponent({
       await applyFilters();
     }
 
+    function calculateTotalForColumn(columnName: string): string {
+      let currency;
+      const total = items.value.reduce((acc, item) => {
+        if (item['currency'] !== 'BRL') return acc + 0;
+        currency = item['currency'];
+        const value = item[columnName] as string;
+        const numericValue = parseCurrencyToNumber(value);
+        return acc + numericValue;
+      }, 0);
+      return FormatOutputHelper.formatCurrency(
+        total,
+        currency ? currency : 'BRL'
+      );
+    }
+
+    function parseCurrencyToNumber(value: string): number {
+      const cleanedValue = value.replace(/[^\d,]/g, '').replace(',', '.');
+      return parseFloat(cleanedValue);
+    }
+
+    async function generateGridTemplateColumns() {
+      await nextTick();
+      const colWidths = getColWidths();
+      gridTemplateColumns.value = colWidths.map((col, i) => {
+        return {
+          width: col,
+          index: i,
+          type: columns.value[i].type,
+          content:
+            columns.value[i].type == 'currency'
+              ? calculateTotalForColumn(columns.value[i].name)
+              : '',
+        };
+      });
+    }
+
+    function getColWidths() {
+      const colWidths = [];
+      const cols = document.querySelectorAll('.my-custom-header');
+      for (let i = 0; i < cols.length; i++)
+        colWidths.push(cols[i]['offsetWidth'] + 'px');
+      return colWidths;
+    }
+
     return {
       items,
       filterFields,
@@ -312,6 +371,7 @@ export default defineComponent({
       applyBooleanFilters,
       totalPages,
       rowsPerPageOptions,
+      gridTemplateColumns,
     };
   },
 
@@ -362,6 +422,14 @@ export default defineComponent({
       this.pagination.rowsPerPage = rowsPerPage.value;
       this.pagination.page = 1;
       this.applyFilters();
+    },
+
+    calculateTotalForColumn(columnName) {
+      return this.items
+        .reduce((total, item) => {
+          return total + Number(item[columnName] || 0);
+        }, 0)
+        .toFixed(2);
     },
   },
 });

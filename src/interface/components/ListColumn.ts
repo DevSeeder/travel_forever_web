@@ -13,4 +13,5 @@ export interface ListColumn {
   classes?: string | ((row: any) => string);
   headerStyle?: string;
   headerClasses?: string;
+  type?: string;
 }

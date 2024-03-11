@@ -101,7 +101,7 @@
   background-color: white;
 }
 
-/*************************************/
+/*****    STICKY    *******/
 
 .my-stretch-table {
   height: calc(100vh - 100px);
@@ -118,4 +118,20 @@ thead tr:last-child th {
 }
 thead tr:first-child th {
   top: 0;
+}
+
+/****       -TOTAIS-     ******/
+.totals-container {
+  display: flex;
+  background-color: #fff; /* ou a cor de fundo da sua tabela */
+}
+
+.total {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+}
+
+.total-currency {
+  font-weight: bold;
 }

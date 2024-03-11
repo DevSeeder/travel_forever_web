@@ -11,8 +11,6 @@ export class ListInputFilterBuilder {
           filters.push(op)
         )
       );
-    console.log('filters');
-    console.log(filters);
     return filters;
   }
 
