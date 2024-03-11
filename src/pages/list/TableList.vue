@@ -120,10 +120,39 @@
                 :style="`min-width:${column.width};`"
                 :key="column.index"
               >
-                <span class="total-currency" v-if="column.type == 'currency'">
-                  Total: </span
-                ><br />
-                {{ column.content }}
+                <q-select
+                  v-if="column.type == 'currency'"
+                  v-model="selectedCurrency[column.index]"
+                  :options="
+                    column.totalsContent.map((total) => ({
+                      label: `${total.totalValue} (${total.currency})`,
+                      value: total.currency,
+                    }))
+                  "
+                  dense
+                  outlined
+                >
+                  <q-tooltip
+                    style="
+                      font-size: 14px;
+                      font-weight: bold;
+                      background: black;
+                    "
+                  >
+                    Totais por moeda
+                  </q-tooltip>
+                  <template v-slot:option="scope">
+                    <q-item
+                      :clickable="true"
+                      style="font-weight: bold"
+                      @click="setSelectedCurrency(scope.opt, column.index)"
+                    >
+                      <q-item-section>
+                        {{ scope.opt.label }}
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
               </div>
             </div>
             <div class="q-pa-md flex justify-between" style="width: 100%">
@@ -148,7 +177,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick, onMounted, ref } from 'vue';
+import { defineComponent, nextTick, onMounted, reactive, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { ListService } from 'src/services/pages/ListService';
 import { ListColumn } from 'src/interface/components/ListColumn';
@@ -156,6 +185,7 @@ import 'src/css/list.css';
 import { ListInputFilter } from 'src/interface/components/ListInputFilter';
 import { DEFAULT_ORDER_MODE, DEFAULT_PAGE_SIZE } from 'src/app.constants';
 import { FormatOutputHelper } from 'src/helper/FormatOutputHelper';
+import { TotalCurrency } from 'src/interface/TotalCurrency';
 
 export default defineComponent({
   props: {
@@ -313,19 +343,24 @@ export default defineComponent({
       await applyFilters();
     }
 
-    function calculateTotalForColumn(columnName: string): string {
-      let currency;
-      const total = items.value.reduce((acc, item) => {
-        if (item['currency'] !== 'BRL') return acc + 0;
-        currency = item['currency'];
-        const value = item[columnName] as string;
-        const numericValue = parseCurrencyToNumber(value);
-        return acc + numericValue;
-      }, 0);
-      return FormatOutputHelper.formatCurrency(
-        total,
-        currency ? currency : 'BRL'
+    function calculateTotalForColumn(columnName: string, index: number) {
+      const totals: TotalCurrency = {};
+
+      items.value.forEach((item) => {
+        if (!totals[item['currency']]) totals[item['currency']] = 0;
+        totals[item['currency']] += parseCurrencyToNumber(item[columnName]);
+      });
+
+      const firstCurrency = totals[Object.keys(totals)[0]];
+      selectedCurrency[index] = FormatOutputHelper.formatCurrency(
+        firstCurrency,
+        Object.keys(totals)[0]
       );
+
+      return Object.keys(totals).map((key) => ({
+        totalValue: FormatOutputHelper.formatCurrency(totals[key], key),
+        currency: key,
+      }));
     }
 
     function parseCurrencyToNumber(value: string): number {
@@ -341,10 +376,10 @@ export default defineComponent({
           width: col,
           index: i,
           type: columns.value[i].type,
-          content:
+          totalsContent:
             columns.value[i].type == 'currency'
-              ? calculateTotalForColumn(columns.value[i].name)
-              : '',
+              ? calculateTotalForColumn(columns.value[i].name, i)
+              : [],
         };
       });
     }
@@ -356,6 +391,8 @@ export default defineComponent({
         colWidths.push(cols[i]['offsetWidth'] + 'px');
       return colWidths;
     }
+
+    const selectedCurrency = reactive({});
 
     return {
       items,
@@ -372,6 +409,7 @@ export default defineComponent({
       totalPages,
       rowsPerPageOptions,
       gridTemplateColumns,
+      selectedCurrency,
     };
   },
 
@@ -411,6 +449,13 @@ export default defineComponent({
       this.applyFilters();
     },
 
+    setSelectedCurrency(option, index) {
+      this.selectedCurrency[index] = {
+        ...option,
+        label: option.label.replace(`(${option.value})`, ''),
+      };
+    },
+
     toggleSelection(filterKey, option) {
       if (!this.activeFilters[filterKey]) this.activeFilters[filterKey] = [];
       const index = this.activeFilters[filterKey].indexOf(option);
@@ -422,14 +467,6 @@ export default defineComponent({
       this.pagination.rowsPerPage = rowsPerPage.value;
       this.pagination.page = 1;
       this.applyFilters();
-    },
-
-    calculateTotalForColumn(columnName) {
-      return this.items
-        .reduce((total, item) => {
-          return total + Number(item[columnName] || 0);
-        }, 0)
-        .toFixed(2);
     },
   },
 });

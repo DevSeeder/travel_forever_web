@@ -61,9 +61,17 @@ export class FormatOutputHelper<Item> {
   }
 
   static formatCurrency(value, currency: string): string {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: currency,
-    }).format(value);
+    try {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: currency,
+      }).format(value);
+    } catch (err) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'decimal',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(value);
+    }
   }
 }

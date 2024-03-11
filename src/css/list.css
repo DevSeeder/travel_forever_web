@@ -129,9 +129,11 @@ thead tr:first-child th {
 .total {
   flex: 1;
   text-align: center;
-  padding: 10px;
+  padding-top: 7px;
+  min-width: min-content;
 }
 
-.total-currency {
+.total-currency,
+.q-field__native.row.items-center span {
   font-weight: bold;
 }
