@@ -10,24 +10,6 @@ export class FormatOutputHelper<Item> {
 
   formatOutputItem(item) {
     const output = item;
-    const decimalFormat = new Intl.NumberFormat('pt-BR', {
-      style: 'decimal',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-
-    let currencyFormat;
-    if (item['currency'] && item['currency']['value']) {
-      try {
-        currencyFormat = new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: item['currency']['value'],
-        });
-      } catch (err) {
-        currencyFormat = decimalFormat;
-      }
-    }
-
     this.fields.forEach((field) => {
       if (!Object(item).hasOwnProperty([field.key]) || !field.key.length)
         return;
@@ -45,15 +27,21 @@ export class FormatOutputHelper<Item> {
           );
           break;
         case 'externalId':
-          output[field.key] = item[field.key]['value'];
+          if (field.key == 'currency') {
+            output['currencyName'] = item[field.key]['translated'];
+            output[field.key] = item[field.key]['code'];
+          } else output[field.key] = item[field.key]['value'];
           break;
         case 'decimal':
         case 'float':
         case 'double':
-          output[field.key] = decimalFormat.format(item[field.key]);
+          output[field.key] = FormatOutputHelper.formatDecimal(item[field.key]);
           break;
         case 'currency':
-          output[field.key] = currencyFormat.format(item[field.key]);
+          output[field.key] = FormatOutputHelper.formatCurrency(
+            item[field.key],
+            item['currency']['value']
+          );
           break;
       }
     });
@@ -67,11 +55,15 @@ export class FormatOutputHelper<Item> {
         currency: currency,
       }).format(value);
     } catch (err) {
-      return new Intl.NumberFormat('pt-BR', {
-        style: 'decimal',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(value);
+      return FormatOutputHelper.formatDecimal(value);
     }
+  }
+
+  static formatDecimal(value): string {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
   }
 }

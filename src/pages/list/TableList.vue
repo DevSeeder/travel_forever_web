@@ -127,6 +127,7 @@
                     column.totalsContent.map((total) => ({
                       label: `${total.totalValue} (${total.currency})`,
                       value: total.currency,
+                      currencyName: total.currencyName,
                     }))
                   "
                   dense
@@ -143,6 +144,9 @@
                     >
                       <q-item-section>
                         {{ scope.opt.label }}
+                        <q-tooltip class="select-tooltip">
+                          {{ scope.opt.currencyName }}
+                        </q-tooltip>
                       </q-item-section>
                     </q-item>
                   </template>
@@ -344,10 +348,12 @@ export default defineComponent({
 
     function calculateTotalForColumn(columnName: string, index: number) {
       const totals: TotalCurrency = {};
+      const currencies: { [key: string]: string } = {};
 
       items.value.forEach((item) => {
         if (!totals[item['currency']]) totals[item['currency']] = 0;
         totals[item['currency']] += parseCurrencyToNumber(item[columnName]);
+        currencies[item['currency']] = item['currencyName'];
       });
 
       const firstCurrency = totals[Object.keys(totals)[0]];
@@ -355,10 +361,10 @@ export default defineComponent({
         firstCurrency,
         Object.keys(totals)[0]
       );
-
       return Object.keys(totals).map((key) => ({
         totalValue: FormatOutputHelper.formatCurrency(totals[key], key),
         currency: key,
+        currencyName: currencies[key],
       }));
     }
 
