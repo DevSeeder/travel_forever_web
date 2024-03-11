@@ -28,4 +28,14 @@ export interface FieldSchema {
       value: string;
     };
   }[];
+  webTemplate?: WebTemplate;
+}
+
+export interface WebTemplate {
+  grid?: {
+    show?: boolean;
+    subItemCondition?: {
+      [key: string]: any;
+    };
+  };
 }

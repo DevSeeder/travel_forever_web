@@ -121,22 +121,6 @@ thead tr:first-child th {
 }
 
 /****       -TOTAIS-     ******/
-.totals-container {
-  display: flex;
-  background-color: #fff;
-  margin-left: -16px;
-  width: -webkit-fill-available;
-  border-bottom: 1px solid rgb(209, 209, 183);
-  padding: 10px;
-}
-
-.total {
-  flex: 1;
-  text-align: center;
-
-  min-width: min-content;
-}
-
 .total-currency,
 .q-field__native.row.items-center span {
   font-weight: bold;
@@ -146,4 +130,15 @@ thead tr:first-child th {
   font-size: 14px;
   font-weight: bold;
   background: black;
+}
+
+.q-table tr:last-child {
+  position: sticky;
+  bottom: 0;
+  background: beige; /* ou qualquer outra cor de fundo que você deseja */
+  z-index: 1; /* para garantir que fique acima do conteúdo da rolagem */
+}
+
+.q-table td {
+  text-align: center;
 }

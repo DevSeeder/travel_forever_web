@@ -101,7 +101,8 @@
           class="q-mb-md"
         />
         <q-table
-          :rows="items"
+          ref="myTable"
+          :rows="itemsWithTotal"
           :columns="columns"
           row-key="id"
           :loading="loading"
@@ -112,24 +113,13 @@
           bordered
           :rows-per-page-options="[5, 10, 20]"
         >
-          <template v-slot:bottom>
-            <div class="totals-container">
-              <div
-                class="total my-custom-cell total-cell"
-                v-for="column in gridTemplateColumns"
-                :style="`min-width:${column.width};`"
-                :key="column.index"
-              >
+          <template v-slot:body-cell="{ row, col }">
+            <q-td :class="{ 'q-tr--totals': row.id === '__totalsRow' }">
+              <template v-if="row.id === '__totalsRow'">
                 <q-select
-                  v-if="column.type == 'currency'"
-                  v-model="selectedCurrency[column.index]"
-                  :options="
-                    column.totalsContent.map((total) => ({
-                      label: `${total.totalValue} (${total.currency})`,
-                      value: total.currency,
-                      currencyName: total.currencyName,
-                    }))
-                  "
+                  v-if="col.type == 'currency'"
+                  v-model="selectedCurrency[col.key]"
+                  :options="currencyOptions[col.name]"
                   dense
                   outlined
                 >
@@ -139,8 +129,8 @@
                   <template v-slot:option="scope">
                     <q-item
                       :clickable="true"
-                      style="font-weight: bold"
-                      @click="setSelectedCurrency(scope.opt, column.index)"
+                      style="font-weight: bold; background: beige"
+                      @click="setSelectedCurrency(scope.opt, col.key)"
                     >
                       <q-item-section>
                         {{ scope.opt.label }}
@@ -151,26 +141,11 @@
                     </q-item>
                   </template>
                 </q-select>
-              </div>
-            </div>
-            <div class="q-pa-md flex justify-between" style="width: 100%">
-              <q-pagination
-                v-model="pagination.page"
-                :max="totalPages"
-                @update:model-value="setPage"
-              ></q-pagination>
-              <q-select
-                v-model="pagination.rowsPerPage"
-                :options="rowsPerPageOptions"
-                dense
-                style="width: 100px"
-                @update:model-value="updateRowsPerPage"
-              >
-                <q-tooltip class="select-tooltip">
-                  Registros por Página
-                </q-tooltip>
-              </q-select>
-            </div>
+              </template>
+              <template v-else>
+                {{ row[col.field] }}
+              </template>
+            </q-td>
           </template>
         </q-table>
       </q-page>
@@ -179,14 +154,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick, onMounted, reactive, ref } from 'vue';
+import { defineComponent, onMounted, reactive, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { ListService } from 'src/services/pages/ListService';
 import { ListColumn } from 'src/interface/components/ListColumn';
 import 'src/css/list.css';
 import { ListInputFilter } from 'src/interface/components/ListInputFilter';
 import { DEFAULT_ORDER_MODE, DEFAULT_PAGE_SIZE } from 'src/app.constants';
-import { FormatOutputHelper } from 'src/helper/FormatOutputHelper';
+import { FormatOutputHelper } from 'src/helper/format/FormatOutputHelper';
 import { TotalCurrency } from 'src/interface/TotalCurrency';
 
 export default defineComponent({
@@ -196,12 +171,38 @@ export default defineComponent({
       required: true,
     },
   },
+  computed: {
+    itemsWithTotal() {
+      if (!this.items.length) return [];
+
+      if (!this.columns.find((col) => col.type === 'currency'))
+        return [...this.items];
+
+      const totalsRow = this.calculateTotals();
+
+      return [...this.items, totalsRow];
+    },
+    currencyOptions() {
+      const options = {};
+      this.columns.forEach((col) => {
+        if (col.type === 'currency' && this.totalsRow[col.name]) {
+          const totals = this.totalsRow[col.name].contents;
+          options[col.name] = totals.map((total) => ({
+            label: `${total.totalValue} (${total.currency})`,
+            value: total.currency,
+            currencyName: total.currencyName,
+          }));
+        }
+      });
+      return options;
+    },
+  },
 
   setup(props) {
     const service = new ListService(props.entity);
 
     const $q = useQuasar();
-    const leftDrawerOpen = ref(false);
+    const leftDrawerOpen = ref(true);
     const filterFields = ref<ListInputFilter[]>([]);
     const activeFilters = ref({});
     const items = ref<[]>([]);
@@ -209,14 +210,13 @@ export default defineComponent({
     const loading = ref(false);
     const totalPages = ref(0);
     const gridTemplateColumns = ref([]);
-    const recordsPerPage = ' Registros por Página';
     const rowsPerPageOptions = [
-      { label: `5 ${recordsPerPage}`, value: 5 },
-      { label: `10 ${recordsPerPage}`, value: 10 },
-      { label: `15 ${recordsPerPage}`, value: 15 },
-      { label: `20 ${recordsPerPage}`, value: 20 },
-      { label: `30 ${recordsPerPage}`, value: 30 },
-      { label: `50 ${recordsPerPage}`, value: 50 },
+      { label: '5', value: 5 },
+      { label: '10', value: 10 },
+      { label: '15', value: 15 },
+      { label: '20', value: 20 },
+      { label: '30', value: 30 },
+      { label: '50', value: 50 },
     ];
 
     const pagination = ref({
@@ -245,8 +245,6 @@ export default defineComponent({
         rowsPerPage: pagination.value.rowsPerPage,
         rowsNumber: response.meta.totalRecords,
       };
-
-      generateGridTemplateColumns();
     }
 
     async function loadColumns() {
@@ -346,58 +344,8 @@ export default defineComponent({
       await applyFilters();
     }
 
-    function calculateTotalForColumn(columnName: string, index: number) {
-      const totals: TotalCurrency = {};
-      const currencies: { [key: string]: string } = {};
-
-      items.value.forEach((item) => {
-        if (!totals[item['currency']]) totals[item['currency']] = 0;
-        totals[item['currency']] += parseCurrencyToNumber(item[columnName]);
-        currencies[item['currency']] = item['currencyName'];
-      });
-
-      const firstCurrency = totals[Object.keys(totals)[0]];
-      selectedCurrency[index] = FormatOutputHelper.formatCurrency(
-        firstCurrency,
-        Object.keys(totals)[0]
-      );
-      return Object.keys(totals).map((key) => ({
-        totalValue: FormatOutputHelper.formatCurrency(totals[key], key),
-        currency: key,
-        currencyName: currencies[key],
-      }));
-    }
-
-    function parseCurrencyToNumber(value: string): number {
-      const cleanedValue = value.replace(/[^\d,]/g, '').replace(',', '.');
-      return parseFloat(cleanedValue);
-    }
-
-    async function generateGridTemplateColumns() {
-      await nextTick();
-      const colWidths = getColWidths();
-      gridTemplateColumns.value = colWidths.map((col, i) => {
-        return {
-          width: columns.value[i].type == 'currency' ? 'min-content' : col,
-          index: i,
-          type: columns.value[i].type,
-          totalsContent:
-            columns.value[i].type == 'currency'
-              ? calculateTotalForColumn(columns.value[i].name, i)
-              : [],
-        };
-      });
-    }
-
-    function getColWidths() {
-      const colWidths = [];
-      const cols = document.querySelectorAll('.my-custom-header');
-      for (let i = 0; i < cols.length; i++)
-        colWidths.push(cols[i]['offsetWidth'] + 'px');
-      return colWidths;
-    }
-
     const selectedCurrency = reactive({});
+    const totalsRow = reactive({});
 
     return {
       items,
@@ -415,6 +363,7 @@ export default defineComponent({
       rowsPerPageOptions,
       gridTemplateColumns,
       selectedCurrency,
+      totalsRow,
     };
   },
 
@@ -431,9 +380,70 @@ export default defineComponent({
         this.calculateTotalPages();
       },
     },
+    items: {
+      immediate: true,
+      handler() {
+        this.calculateTotals();
+      },
+    },
   },
 
   methods: {
+    calculateTotals() {
+      const newTotalsRow = { ...this.totalsRow };
+      this.columns.forEach((col, index) => {
+        if (col.type !== 'currency') {
+          newTotalsRow[col.name] = '';
+          return;
+        }
+
+        const calcTotalCol = this.calculateTotalForColumn(col.name, index);
+        this.setSelectedCurrency(
+          {
+            label: `${calcTotalCol[0].totalValue} (${calcTotalCol[0].currency})`,
+            value: calcTotalCol[0].currency,
+            currencyName: calcTotalCol[0].currencyName,
+          },
+          col.key
+        );
+
+        newTotalsRow[col.name] = {
+          contents: calcTotalCol,
+        };
+      });
+
+      newTotalsRow['id'] = '__totalsRow';
+      newTotalsRow['name'] = 'Total Test';
+      // Substituir o objeto antigo pelo novo para disparar a reatividade
+      this.totalsRow = newTotalsRow;
+      return newTotalsRow;
+    },
+
+    calculateTotalForColumn(columnName: string) {
+      const totals: TotalCurrency = {};
+      const currencies: { [key: string]: string } = {};
+
+      this.items.forEach((item) => {
+        if (!totals[item['currency']]) totals[item['currency']] = 0;
+        totals[item['currency']] += this.parseCurrencyToNumber(
+          item[columnName]
+        );
+        currencies[item['currency']] = item['currencyName'];
+      });
+
+      return Object.keys(totals).map((key) => ({
+        totalValue: FormatOutputHelper.formatCurrency(totals[key], key),
+        currency: key,
+        currencyName: currencies[key],
+      }));
+    },
+
+    parseCurrencyToNumber(value: string): number {
+      if (!value) return 0;
+      const cleanedValue = value.replace(/[^\d,]/g, '').replace(',', '.');
+      return parseFloat(cleanedValue);
+    },
+
     getDisableBoolean(key: string): boolean {
       const oppositeKey = key.endsWith('_ne')
         ? key.replace('_ne', '')
@@ -454,8 +464,8 @@ export default defineComponent({
       this.applyFilters();
     },
 
-    setSelectedCurrency(option, index) {
-      this.selectedCurrency[index] = {
+    setSelectedCurrency(option, fieldKey) {
+      this.selectedCurrency[fieldKey] = {
         ...option,
         label: option.label.replace(`(${option.value})`, ''),
       };

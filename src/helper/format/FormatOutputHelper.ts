@@ -1,8 +1,8 @@
 import { FieldSchema } from 'src/interface/schema/FieldSchema';
-import { DateHelper } from './DateHelper';
+import { DateHelper } from '../DateHelper';
 
 export class FormatOutputHelper<Item> {
-  constructor(private readonly fields: FieldSchema[]) {}
+  constructor(protected readonly fields: FieldSchema[]) {}
 
   formatOutputItems(items: Item[]): Item[] {
     return items.map((item) => this.formatOutputItem(item));

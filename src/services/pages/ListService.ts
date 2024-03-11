@@ -6,9 +6,10 @@ import { EntitySchema, FormResponse } from 'src/interface/schema/FormResponse';
 import { ClientTravelForeverService } from '../client/ClientTravelForeverService';
 import store from 'src/store';
 import { FieldSchema } from 'src/interface/schema/FieldSchema';
-import { FormatOutputHelper } from 'src/helper/FormatOutputHelper';
+import { FormatOutputHelper } from 'src/helper/format/FormatOutputHelper';
 import { ListInputFilterBuilder } from 'src/builders/ListInputFilterBuilder';
 import { ListInputFilter } from 'src/interface/components/ListInputFilter';
+import { GridFormatOutputHelper } from 'src/helper/format/GridFormatOutputHelper';
 
 export class ListService<Item> {
   private clientService: ClientTravelForeverService;
@@ -53,7 +54,7 @@ export class ListService<Item> {
   }
 
   private formatOutput(items: Item[]) {
-    const formatHelper = new FormatOutputHelper(this.fields);
+    const formatHelper = new GridFormatOutputHelper(this.fields);
     return formatHelper.formatOutputItems(items);
   }
 }

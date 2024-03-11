@@ -4,7 +4,7 @@ import { ListColumn } from 'src/interface/components/ListColumn';
 export class ListColumnBuilder {
   static buildColumns(items: FieldSchema[]): ListColumn[] {
     return items
-      .filter((item) => item.grid)
+      .filter((item) => item?.webTemplate?.grid?.show)
       .map((item) => ListColumnBuilder.buildColumn(item));
   }
 
