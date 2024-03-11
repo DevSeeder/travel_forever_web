@@ -91,7 +91,6 @@ export default {
     async onSubmit() {
       this.loading = true;
       if (!this.validateForm()) {
-        console.log('Validation failed');
         this.loading = false;
         return;
       }

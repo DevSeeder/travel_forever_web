@@ -16,9 +16,7 @@
             :error="errors.name"
             autofocus
           />
-          <div v-if="errors.name" class="text-negative">
-            Name is required
-          </div>
+          <div v-if="errors.name" class="text-negative">Name is required</div>
 
           <q-input
             filled
@@ -98,13 +96,14 @@ export default {
       this.errors.password = !this.registerForm.password;
       this.errors.name = !this.registerForm.name;
 
-      return this.errors.username || this.errors.password || this.errors.name ? false : true;
+      return this.errors.username || this.errors.password || this.errors.name
+        ? false
+        : true;
     },
 
     async onSubmit() {
       this.loading = true;
       if (!this.validateForm()) {
-        console.log('Validation failed');
         this.loading = false;
         return;
       }

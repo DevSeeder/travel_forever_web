@@ -118,7 +118,7 @@
               <template v-if="row.id === '__totalsRow'">
                 <q-select
                   v-if="col.type == 'currency'"
-                  v-model="selectedCurrency[col.key]"
+                  v-model="selectedCurrency[col.name]"
                   :options="currencyOptions[col.name]"
                   dense
                   outlined
@@ -130,7 +130,7 @@
                     <q-item
                       :clickable="true"
                       style="font-weight: bold; background: beige"
-                      @click="setSelectedCurrency(scope.opt, col.key)"
+                      @click="setSelectedCurrency(scope.opt, col.name)"
                     >
                       <q-item-section>
                         {{ scope.opt.label }}
@@ -180,21 +180,11 @@ export default defineComponent({
 
       const totalsRow = this.calculateTotals();
 
-      return [...this.items, totalsRow];
-    },
-    currencyOptions() {
-      const options = {};
-      this.columns.forEach((col) => {
-        if (col.type === 'currency' && this.totalsRow[col.name]) {
-          const totals = this.totalsRow[col.name].contents;
-          options[col.name] = totals.map((total) => ({
-            label: `${total.totalValue} (${total.currency})`,
-            value: total.currency,
-            currencyName: total.currencyName,
-          }));
-        }
+      Object.keys(this.currencyOptions).forEach((key) => {
+        this.setSelectedCurrency(this.currencyOptions[key][0], key);
       });
-      return options;
+
+      return [...this.items, totalsRow];
     },
   },
 
@@ -343,6 +333,7 @@ export default defineComponent({
 
     const selectedCurrency = reactive({});
     const totalsRow = reactive({});
+    const currencyOptions = reactive({});
 
     return {
       items,
@@ -361,6 +352,7 @@ export default defineComponent({
       gridTemplateColumns,
       selectedCurrency,
       totalsRow,
+      currencyOptions,
     };
   },
 
@@ -386,6 +378,22 @@ export default defineComponent({
   },
 
   methods: {
+    setCurrencyOptions() {
+      const options = {};
+      this.columns.forEach((col) => {
+        if (col.type === 'currency' && this.totalsRow[col.name]) {
+          const totals = this.totalsRow[col.name].contents;
+          options[col.name] = totals.map((total) => ({
+            label: `${total.totalValue} (${total.currency})`,
+            value: total.currency,
+            currencyName: total.currencyName,
+          }));
+        }
+      });
+
+      this.currencyOptions = options;
+    },
+
     calculateTotals() {
       if (!this.columns.find((col) => col.type === 'currency')) return;
 
@@ -397,14 +405,6 @@ export default defineComponent({
         }
 
         const calcTotalCol = this.calculateTotalForColumn(col.name);
-        this.setSelectedCurrency(
-          {
-            label: `${calcTotalCol[0].totalValue} (${calcTotalCol[0].currency})`,
-            value: calcTotalCol[0].currency,
-            currencyName: calcTotalCol[0].currencyName,
-          },
-          col.key
-        );
 
         newTotalsRow[col.name] = {
           contents: calcTotalCol,
@@ -412,9 +412,10 @@ export default defineComponent({
       });
 
       newTotalsRow['id'] = '__totalsRow';
-      newTotalsRow['name'] = 'Total Test';
-      // Substituir o objeto antigo pelo novo para disparar a reatividade
       this.totalsRow = newTotalsRow;
+
+      this.setCurrencyOptions();
+
       return newTotalsRow;
     },
 
@@ -464,6 +465,8 @@ export default defineComponent({
     },
 
     setSelectedCurrency(option, fieldKey) {
+      if (!this.selectedCurrency) this.selectedCurrency = {};
+
       this.selectedCurrency[fieldKey] = {
         ...option,
         label: option.label.replace(`(${option.value})`, ''),
