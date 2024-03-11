@@ -40,7 +40,7 @@ export class FormatOutputHelper<Item> {
         case 'currency':
           output[field.key] = FormatOutputHelper.formatCurrency(
             item[field.key],
-            item['currency']['value']
+            item['currency']['code']
           );
           break;
       }
