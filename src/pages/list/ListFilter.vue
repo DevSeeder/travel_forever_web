@@ -1,7 +1,15 @@
 <!-- eslint-disable vue/no-mutating-props -->
 <template>
-  <q-drawer show-if-above v-model="$props.leftDrawerOpen" side="left" bordered>
+  <q-drawer show-if-above v-model="openFilters" side="left" bordered>
     <div class="filters-container q-pa-md">
+      <q-btn
+        flat
+        round
+        dense
+        class="close-btn"
+        icon="close"
+        @click="closeDrawer"
+      />
       <div class="filter-title">Filtros</div>
       <div class="input-filter-container">
         <div
@@ -76,6 +84,7 @@
       <div class="btn-side-filter btn-side-container">
         <q-btn
           class="q-mb-md full-width btn-side-filter"
+          style="background: #ffffff1f !important"
           color="primary"
           icon-right="filter_list"
           label="Aplicar Filtros"
@@ -83,6 +92,7 @@
         />
         <q-btn
           class="q-mb-md full-width btn-side-filter"
+          style="background: lightgray !important; color: black !important"
           color="grey"
           icon-right="refresh"
           label="Resetar"
@@ -103,9 +113,13 @@ export default defineComponent({
   props: {
     service: ListService,
     loadItems: Function,
-    leftDrawerOpen: {
+    hideFilters: {
       type: Boolean,
-      default: false,
+    },
+  },
+  computed: {
+    openFilters() {
+      return !this.hideFilters;
     },
   },
   methods: {
@@ -123,10 +137,14 @@ export default defineComponent({
     },
   },
 
-  setup(props) {
+  setup(props, { emit }) {
     const $q = useQuasar();
     const activeFilters = ref({});
     const filterFields = ref([]);
+
+    function closeDrawer() {
+      emit('update:setHideFilter');
+    }
 
     async function applyFilters() {
       $q.loading.show();
@@ -191,6 +209,7 @@ export default defineComponent({
       applyBooleanFilters,
       loadFilters,
       getDisableBoolean,
+      closeDrawer,
     };
   },
 });

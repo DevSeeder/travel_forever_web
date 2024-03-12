@@ -1,20 +1,26 @@
 <template>
-  <q-layout>
+  <q-header>
+    <ToolbarComponent></ToolbarComponent>
+  </q-header>
+  <q-btn
+    fab
+    icon="tune"
+    @click="setHideFilter(!hideFilter)"
+    class="q-mb-md btn-filter"
+  >
+    <q-tooltip> Filtros </q-tooltip>
+  </q-btn>
+  <q-layout class="rounded-borders">
     <ListFilter
       ref="listFilterRef"
       :service="service"
-      :leftDrawerOpen="leftDrawerOpen"
       :load-items="loadItems"
+      :hideFilters="hideFilter"
+      @update:setHideFilter="setHideFilter(true)"
     ></ListFilter>
 
     <q-page-container>
       <q-page class="q-pa-md">
-        <q-btn
-          fab
-          icon="tune"
-          @click="leftDrawerOpen = !leftDrawerOpen"
-          class="q-mb-md"
-        />
         <q-table
           :rows="itemsWithTotal"
           :columns="columns"
@@ -25,7 +31,7 @@
           class="my-stretch-table fixed-header-table"
           flat
           bordered
-          :rows-per-page-options="[5, 10, 20]"
+          :rows-per-page-options="DEFAULT_OPTIONS_ROWS_PER_PAGE"
         >
           <template v-slot:body-cell="{ row, col }">
             <q-td :class="{ 'q-tr--totals': row.id === '__totalsRow' }">
@@ -75,14 +81,21 @@ import { ListColumn } from 'src/interface/components/ListColumn';
 import 'src/css/pages/list/list.css';
 import 'src/css/pages/list/filter.css';
 import 'src/css/pages/list/totals.css';
-import { DEFAULT_ORDER_MODE, DEFAULT_PAGE_SIZE } from 'src/app.constants';
+import {
+  DEFAULT_ORDER_MODE,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_OPTIONS_ROWS_PER_PAGE,
+} from 'src/app.constants';
 import { FormatOutputHelper } from 'src/helper/format/FormatOutputHelper';
 import { TotalCurrency } from 'src/interface/TotalCurrency';
 import ListFilter from '../ListFilter.vue';
+import { EntitySchema } from 'src/interface/schema/FormResponse';
+import ToolbarComponent from 'src/components/ToolbarComponent.vue';
 
 export default defineComponent({
   components: {
     ListFilter,
+    ToolbarComponent,
   },
   props: {
     entity: {
@@ -113,11 +126,19 @@ export default defineComponent({
     const listFilterRef = ref(null);
 
     const $q = useQuasar();
-    const leftDrawerOpen = ref(true);
+    const hideFilter = ref(false);
     const items = ref<[]>([]);
     const columns = ref<ListColumn[]>([]);
     const loading = ref(false);
     const totalPages = ref(0);
+    const closeFilter = ref(null);
+    const metaValues = ref<Partial<EntitySchema>>({
+      translations: {
+        entityLabel: '',
+        itemLabel: '',
+        entityDescription: '',
+      },
+    });
 
     const pagination = ref({
       sortBy: null,
@@ -150,6 +171,9 @@ export default defineComponent({
     async function loadColumns() {
       columns.value = await service.loadColumns();
       const metaList = await service.loadMeta();
+      metaValues.value = {
+        translations: metaList.translations,
+      };
       pagination.value = {
         sortBy: metaList.metaList?.defaultOrderField || null,
         descending: metaList.metaList?.defaultOrderMode
@@ -180,6 +204,7 @@ export default defineComponent({
         await loadColumns();
         await loadItems();
         await listFilterRef.value.loadFilters();
+        closeFilter.value(true);
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
         $q.notify({
@@ -200,7 +225,7 @@ export default defineComponent({
       pagination,
       columns,
       loading,
-      leftDrawerOpen,
+      hideFilter,
       onRequest,
       totalPages,
       selectedCurrency,
@@ -209,6 +234,9 @@ export default defineComponent({
       listFilterRef,
       service,
       loadItems,
+      DEFAULT_OPTIONS_ROWS_PER_PAGE,
+      closeFilter,
+      metaValues,
     };
   },
 
@@ -222,6 +250,10 @@ export default defineComponent({
   },
 
   methods: {
+    setHideFilter(hide: boolean) {
+      this.hideFilter = hide;
+    },
+
     setCurrencyOptions() {
       const options = {};
       this.columns.forEach((col) => {
@@ -296,6 +328,10 @@ export default defineComponent({
         label: option.label.replace(`(${option.value})`, ''),
       };
     },
+  },
+
+  mounted() {
+    this.closeFilter = this.setHideFilter;
   },
 });
 </script>
