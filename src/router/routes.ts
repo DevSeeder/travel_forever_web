@@ -3,7 +3,7 @@ import { RouteRecordRaw } from 'vue-router';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    component: () => import('pages/list/TableList.vue'),
+    component: () => import('pages/list/table/TableList.vue'),
     props: {
       entity: 'travels',
     },
@@ -11,7 +11,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/list/:entity',
-    component: () => import('pages/list/TableList.vue'),
+    component: () => import('pages/list/table/TableList.vue'),
     props: true,
     meta: { requiresAuth: true },
   },

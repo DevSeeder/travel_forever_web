@@ -1,96 +1,11 @@
 <template>
   <q-layout>
-    <q-drawer show-if-above v-model="leftDrawerOpen" side="left" bordered>
-      <div class="filters-container q-pa-md">
-        <div class="filter-title">Filtros</div>
-        <div class="input-filter-container">
-          <div
-            v-for="filter in filterFields"
-            :key="filter.key"
-            class="q-mr-md q-mb-md filter-field"
-          >
-            <q-input
-              v-if="['text', 'currency'].includes(filter.type)"
-              v-model="activeFilters[filter.key]"
-              :label="filter.label"
-              dense
-              class="custom-border"
-            />
-            <q-input
-              v-else-if="['date', 'datetime'].includes(filter.type)"
-              v-model="activeFilters[filter.key]"
-              :label="filter.label"
-              dense
-              class="custom-border"
-              type="date"
-            />
-            <q-input
-              v-else-if="filter.type === 'number'"
-              v-model="activeFilters[filter.key]"
-              :label="filter.label"
-              dense
-              type="number"
-            />
-            <q-select
-              v-else-if="filter.type === 'externalId'"
-              v-model="activeFilters[filter.key]"
-              :options="filter.options"
-              :label="filter.label"
-              outlined
-              multiple
-              class="custom-border"
-              use-chips
-            >
-              <template v-slot:option="scope">
-                <q-item
-                  :clickable="true"
-                  :class="{
-                    'selected-item':
-                      activeFilters[filter.key] &&
-                      activeFilters[filter.key].includes(scope.opt.value),
-                  }"
-                  @click="toggleSelection(filter.key, scope.opt)"
-                >
-                  <q-item-section>
-                    {{ scope.opt.label }}
-                  </q-item-section>
-                  <q-item-section avatar>
-                    <q-icon :name="scope.opt.icon" />
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-            <q-toggle
-              v-else-if="filter.type === 'boolean'"
-              v-model="activeFilters[filter.key]"
-              :label="filter.label"
-              :disable="getDisableBoolean(filter.key)"
-              true
-              color="blue"
-              @update:model-value="
-                (value) => applyBooleanFilters(filter.key, value)
-              "
-            />
-          </div>
-        </div>
-        <div class="btn-side-filter btn-side-container">
-          <q-btn
-            class="q-mb-md full-width btn-side-filter"
-            color="primary"
-            icon-right="filter_list"
-            label="Aplicar Filtros"
-            @click="applyFilters"
-          />
-          <q-btn
-            class="q-mb-md full-width btn-side-filter"
-            color="grey"
-            icon-right="refresh"
-            label="Resetar"
-            @click="resetFilters"
-          />
-        </div>
-      </div>
-    </q-drawer>
+    <ListFilter
+      ref="listFilterRef"
+      :service="service"
+      :leftDrawerOpen="leftDrawerOpen"
+      :load-items="loadItems"
+    ></ListFilter>
 
     <q-page-container>
       <q-page class="q-pa-md">
@@ -101,7 +16,6 @@
           class="q-mb-md"
         />
         <q-table
-          ref="myTable"
           :rows="itemsWithTotal"
           :columns="columns"
           row-key="id"
@@ -159,12 +73,15 @@ import { useQuasar } from 'quasar';
 import { ListService } from 'src/services/pages/ListService';
 import { ListColumn } from 'src/interface/components/ListColumn';
 import 'src/css/list.css';
-import { ListInputFilter } from 'src/interface/components/ListInputFilter';
 import { DEFAULT_ORDER_MODE, DEFAULT_PAGE_SIZE } from 'src/app.constants';
 import { FormatOutputHelper } from 'src/helper/format/FormatOutputHelper';
 import { TotalCurrency } from 'src/interface/TotalCurrency';
+import ListFilter from '../ListFilter.vue';
 
 export default defineComponent({
+  components: {
+    ListFilter,
+  },
   props: {
     entity: {
       type: String,
@@ -191,10 +108,10 @@ export default defineComponent({
   setup(props) {
     const service = new ListService(props.entity);
 
+    const listFilterRef = ref(null);
+
     const $q = useQuasar();
     const leftDrawerOpen = ref(true);
-    const filterFields = ref<ListInputFilter[]>([]);
-    const activeFilters = ref({});
     const items = ref<[]>([]);
     const columns = ref<ListColumn[]>([]);
     const loading = ref(false);
@@ -252,10 +169,6 @@ export default defineComponent({
       };
     }
 
-    async function loadFilters() {
-      filterFields.value = await service.loadFilters();
-    }
-
     async function onRequest(props) {
       const { page, rowsPerPage, sortBy, descending } = props.pagination;
       pagination.value = {
@@ -265,7 +178,7 @@ export default defineComponent({
         sortBy,
         descending,
       };
-      applyFilters();
+      listFilterRef.value.applyFilters();
     }
 
     onMounted(async () => {
@@ -273,7 +186,7 @@ export default defineComponent({
       try {
         await loadColumns();
         await loadItems();
-        await loadFilters();
+        await listFilterRef.value.loadFilters();
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
         $q.notify({
@@ -285,74 +198,26 @@ export default defineComponent({
       }
     });
 
-    async function applyFilters() {
-      $q.loading.show();
-      let filterParams = {};
-      Object.keys(activeFilters.value).forEach((key) => {
-        if (
-          !activeFilters.value[key] ||
-          (Array.isArray(activeFilters.value[key]) &&
-            !activeFilters.value[key].length)
-        )
-          return;
-        if (typeof activeFilters.value[key] == 'object') {
-          filterParams[key] = activeFilters.value[key]
-            .map((field) => field.value)
-            .join(',');
-          return;
-        }
-        filterParams[key] = activeFilters.value[key];
-      });
-      await loadItems(filterParams);
-      $q.loading.hide();
-    }
-
-    function resetFilters() {
-      Object.keys(activeFilters.value).forEach((key) => {
-        const filter = filterFields.value.find((f) => f.key === key);
-        if (filter && filter.type === 'externalId')
-          activeFilters.value[key] = [];
-        else activeFilters.value[key] = '';
-      });
-    }
-
-    function getOpositeKey(key: string): string {
-      return key.endsWith('_ne') ? key.replace('_ne', '') : `${key}_ne`;
-    }
-
-    async function applyBooleanFilters(key: string, value: boolean) {
-      const oppositeKey = getOpositeKey(key);
-
-      if (value === true) {
-        activeFilters.value[key] = true;
-        activeFilters.value[oppositeKey] = false;
-      } else activeFilters.value[key] = false;
-
-      await applyFilters();
-    }
-
     const selectedCurrency = reactive({});
     const totalsRow = reactive({});
     const currencyOptions = reactive({});
 
     return {
       items,
-      filterFields,
       pagination,
       columns,
       loading,
-      activeFilters,
-      applyFilters,
-      resetFilters,
       leftDrawerOpen,
       onRequest,
-      applyBooleanFilters,
       totalPages,
       rowsPerPageOptions,
       gridTemplateColumns,
       selectedCurrency,
       totalsRow,
       currencyOptions,
+      listFilterRef,
+      service,
+      loadItems,
     };
   },
 
@@ -444,13 +309,6 @@ export default defineComponent({
       return parseFloat(cleanedValue);
     },
 
-    getDisableBoolean(key: string): boolean {
-      const oppositeKey = key.endsWith('_ne')
-        ? key.replace('_ne', '')
-        : `${key}_ne`;
-      return this.activeFilters[oppositeKey] === true;
-    },
-
     calculateTotalPages() {
       if (!this.pagination.rowsNumber) return 0;
 
@@ -461,7 +319,7 @@ export default defineComponent({
 
     setPage(pageNumber) {
       this.pagination.page = pageNumber;
-      this.applyFilters();
+      this.listFilterRef.applyFilters();
     },
 
     setSelectedCurrency(option, fieldKey) {
@@ -473,17 +331,10 @@ export default defineComponent({
       };
     },
 
-    toggleSelection(filterKey, option) {
-      if (!this.activeFilters[filterKey]) this.activeFilters[filterKey] = [];
-      const index = this.activeFilters[filterKey].indexOf(option);
-      if (index === -1) this.activeFilters[filterKey].push(option);
-      else this.activeFilters[filterKey].splice(index, 1);
-    },
-
     updateRowsPerPage(rowsPerPage) {
       this.pagination.rowsPerPage = rowsPerPage.value;
       this.pagination.page = 1;
-      this.applyFilters();
+      this.listFilterRef.applyFilters();
     },
   },
 });
