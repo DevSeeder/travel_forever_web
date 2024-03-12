@@ -72,7 +72,9 @@ import { defineComponent, onMounted, reactive, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { ListService } from 'src/services/pages/ListService';
 import { ListColumn } from 'src/interface/components/ListColumn';
-import 'src/css/list.css';
+import 'src/css/pages/list/list.css';
+import 'src/css/pages/list/filter.css';
+import 'src/css/pages/list/totals.css';
 import { DEFAULT_ORDER_MODE, DEFAULT_PAGE_SIZE } from 'src/app.constants';
 import { FormatOutputHelper } from 'src/helper/format/FormatOutputHelper';
 import { TotalCurrency } from 'src/interface/TotalCurrency';
@@ -116,15 +118,6 @@ export default defineComponent({
     const columns = ref<ListColumn[]>([]);
     const loading = ref(false);
     const totalPages = ref(0);
-    const gridTemplateColumns = ref([]);
-    const rowsPerPageOptions = [
-      { label: '5', value: 5 },
-      { label: '10', value: 10 },
-      { label: '15', value: 15 },
-      { label: '20', value: 20 },
-      { label: '30', value: 30 },
-      { label: '50', value: 50 },
-    ];
 
     const pagination = ref({
       sortBy: null,
@@ -210,8 +203,6 @@ export default defineComponent({
       leftDrawerOpen,
       onRequest,
       totalPages,
-      rowsPerPageOptions,
-      gridTemplateColumns,
       selectedCurrency,
       totalsRow,
       currencyOptions,
@@ -222,18 +213,6 @@ export default defineComponent({
   },
 
   watch: {
-    'pagination.rowsPerPage': {
-      immediate: true,
-      handler() {
-        this.calculateTotalPages();
-      },
-    },
-    'pagination.rowsNumber': {
-      immediate: true,
-      handler() {
-        this.calculateTotalPages();
-      },
-    },
     items: {
       immediate: true,
       handler() {
@@ -309,19 +288,6 @@ export default defineComponent({
       return parseFloat(cleanedValue);
     },
 
-    calculateTotalPages() {
-      if (!this.pagination.rowsNumber) return 0;
-
-      this.totalPages = Math.ceil(
-        this.pagination.rowsNumber / this.pagination.rowsPerPage
-      );
-    },
-
-    setPage(pageNumber) {
-      this.pagination.page = pageNumber;
-      this.listFilterRef.applyFilters();
-    },
-
     setSelectedCurrency(option, fieldKey) {
       if (!this.selectedCurrency) this.selectedCurrency = {};
 
@@ -329,12 +295,6 @@ export default defineComponent({
         ...option,
         label: option.label.replace(`(${option.value})`, ''),
       };
-    },
-
-    updateRowsPerPage(rowsPerPage) {
-      this.pagination.rowsPerPage = rowsPerPage.value;
-      this.pagination.page = 1;
-      this.listFilterRef.applyFilters();
     },
   },
 });
