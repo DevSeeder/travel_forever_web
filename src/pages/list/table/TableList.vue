@@ -85,6 +85,7 @@ import { FormatOutputHelper } from 'src/helper/format/FormatOutputHelper';
 import { TotalCurrency } from 'src/interface/TotalCurrency';
 import ListFilter from '../ListFilter.vue';
 import ToolbarComponent from 'src/components/ToolbarComponent.vue';
+import { useCustomLoading } from 'src/composable/useCustomLoading';
 
 export default defineComponent({
   components: {
@@ -120,6 +121,8 @@ export default defineComponent({
     const listFilterRef = ref(null);
 
     const $q = useQuasar();
+    const { showLoading, hideLoading } = useCustomLoading($q);
+
     const hideFilter = ref(false);
     const items = ref<[]>([]);
     const columns = ref<ListColumn[]>([]);
@@ -185,7 +188,7 @@ export default defineComponent({
     }
 
     onMounted(async () => {
-      $q.loading.show();
+      showLoading();
       try {
         await loadColumns();
         await loadItems();
