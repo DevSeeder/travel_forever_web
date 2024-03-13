@@ -81,6 +81,7 @@
           />
         </div>
       </div>
+      <div class="filter-title"></div>
       <div class="btn-side-filter btn-side-container">
         <q-btn
           class="q-mb-md full-width btn-side-filter"

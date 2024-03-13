@@ -1,18 +1,13 @@
 <template>
-  <q-header>
-    <ToolbarComponent></ToolbarComponent>
-  </q-header>
-  <q-btn
-    fab
-    icon="tune"
-    @click="setHideFilter(!hideFilter)"
-    class="q-mb-md btn-filter"
-  >
-    <q-tooltip> Filtros </q-tooltip>
-  </q-btn>
+  <ToolbarComponent
+    @toggle-filter="setHideFilter(!hideFilter)"
+    :showFilterButton="true"
+    :entity="$props.entity"
+  ></ToolbarComponent>
   <q-layout class="rounded-borders">
     <ListFilter
       ref="listFilterRef"
+      v-show="showFilter"
       :service="service"
       :load-items="loadItems"
       :hideFilters="hideFilter"
@@ -89,7 +84,6 @@ import {
 import { FormatOutputHelper } from 'src/helper/format/FormatOutputHelper';
 import { TotalCurrency } from 'src/interface/TotalCurrency';
 import ListFilter from '../ListFilter.vue';
-import { EntitySchema } from 'src/interface/schema/FormResponse';
 import ToolbarComponent from 'src/components/ToolbarComponent.vue';
 
 export default defineComponent({
@@ -132,13 +126,7 @@ export default defineComponent({
     const loading = ref(false);
     const totalPages = ref(0);
     const closeFilter = ref(null);
-    const metaValues = ref<Partial<EntitySchema>>({
-      translations: {
-        entityLabel: '',
-        itemLabel: '',
-        entityDescription: '',
-      },
-    });
+    const showFilter = ref(false);
 
     const pagination = ref({
       sortBy: null,
@@ -171,9 +159,7 @@ export default defineComponent({
     async function loadColumns() {
       columns.value = await service.loadColumns();
       const metaList = await service.loadMeta();
-      metaValues.value = {
-        translations: metaList.translations,
-      };
+
       pagination.value = {
         sortBy: metaList.metaList?.defaultOrderField || null,
         descending: metaList.metaList?.defaultOrderMode
@@ -236,7 +222,7 @@ export default defineComponent({
       loadItems,
       DEFAULT_OPTIONS_ROWS_PER_PAGE,
       closeFilter,
-      metaValues,
+      showFilter,
     };
   },
 
@@ -252,6 +238,7 @@ export default defineComponent({
   methods: {
     setHideFilter(hide: boolean) {
       this.hideFilter = hide;
+      this.showFilter = !hide;
     },
 
     setCurrencyOptions() {
