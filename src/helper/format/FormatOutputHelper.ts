@@ -4,8 +4,12 @@ import { DateHelper } from '../DateHelper';
 export class FormatOutputHelper<Item> {
   constructor(protected readonly fields: FieldSchema[]) {}
 
-  formatOutputItems(items: Item[]): Item[] {
-    return items.map((item) => this.formatOutputItem(item));
+  async formatOutputItems(items: Item[]) {
+    const arrItems: Item[] = [];
+    for await (const item of items)
+      arrItems.push(await this.formatOutputItem(item));
+
+    return arrItems;
   }
 
   formatOutputItem(item) {

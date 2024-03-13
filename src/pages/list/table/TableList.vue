@@ -71,7 +71,6 @@
 <script lang="ts">
 import { defineComponent, onMounted, reactive, ref } from 'vue';
 import { useQuasar } from 'quasar';
-import { ListService } from 'src/services/pages/ListService';
 import { ListColumn } from 'src/interface/components/ListColumn';
 import 'src/css/pages/list/list.css';
 import 'src/css/pages/list/filter.css';
@@ -86,6 +85,7 @@ import { TotalCurrency } from 'src/interface/TotalCurrency';
 import ListFilter from '../ListFilter.vue';
 import ToolbarComponent from 'src/components/ToolbarComponent.vue';
 import { useCustomLoading } from 'src/composable/useCustomLoading';
+import { TableService } from 'src/services/pages/list/TableService';
 
 export default defineComponent({
   components: {
@@ -116,7 +116,7 @@ export default defineComponent({
   },
 
   setup(props) {
-    const service = new ListService(props.entity);
+    const service = new TableService(props.entity);
 
     const listFilterRef = ref(null);
 
@@ -201,7 +201,7 @@ export default defineComponent({
           message: `Falha ao carregar os dados: ${err}`,
         });
       } finally {
-        $q.loading.hide();
+        hideLoading();
       }
     });
 
@@ -325,3 +325,4 @@ export default defineComponent({
   },
 });
 </script>
+src/services/pages/list/ListService

@@ -1,19 +1,18 @@
-import { storageService } from '../storage/StorageService';
+import { storageService } from '../../storage/StorageService';
 import { ListColumnBuilder } from 'src/builders/ListColumnBuilder';
 import { ListColumn } from 'src/interface/components/ListColumn';
 import { PaginatedResponse } from 'src/interface/PaginatedResponse';
 import { FormResponse } from 'src/interface/schema/FormResponse';
-import { ClientTravelForeverService } from '../client/ClientTravelForeverService';
+import { ClientTravelForeverService } from '../../client/ClientTravelForeverService';
 import { FieldSchema } from 'src/interface/schema/FieldSchema';
 import { ListInputFilterBuilder } from 'src/builders/ListInputFilterBuilder';
 import { ListInputFilter } from 'src/interface/components/ListInputFilter';
-import { GridFormatOutputHelper } from 'src/helper/format/GridFormatOutputHelper';
-import { AbstractWebService } from './AbstractWebService';
+import { AbstractWebService } from '../AbstractWebService';
 import store from 'src/store';
 
 export class ListService<Item> extends AbstractWebService {
-  private clientService: ClientTravelForeverService;
-  private fields: FieldSchema[];
+  protected clientService: ClientTravelForeverService;
+  protected fields: FieldSchema[] = [];
 
   constructor(protected readonly entity: string) {
     super(entity);
@@ -33,7 +32,7 @@ export class ListService<Item> extends AbstractWebService {
 
   async loadItems(params = {}): Promise<PaginatedResponse<Item>> {
     const response = await this.clientService.search(this.entity, params);
-    response.data.items = this.formatOutput(response.data.items);
+    response.data.items = await this.formatOutput(response.data.items);
     return response.data;
   }
 
@@ -46,8 +45,18 @@ export class ListService<Item> extends AbstractWebService {
     return ListInputFilterBuilder.buildFilters(fieldsData.fields);
   }
 
-  private formatOutput(items: Item[]) {
-    const formatHelper = new GridFormatOutputHelper(this.fields);
-    return formatHelper.formatOutputItems(items);
+  protected async formatOutput(items: Item[]) {
+    return items;
+  }
+
+  protected async getFields(): Promise<FieldSchema[]> {
+    if (this.fields.length) return this.fields;
+
+    const fieldsData: FormResponse = await storageService.getValue(
+      `${this.entity}_fields`,
+      `/${this.entity}/form/fields`
+    );
+    this.fields = fieldsData.fields;
+    return this.fields;
   }
 }

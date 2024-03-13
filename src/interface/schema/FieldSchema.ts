@@ -38,4 +38,8 @@ export interface WebTemplate {
       [key: string]: any;
     };
   };
+  card?: {
+    show?: boolean;
+    type?: string;
+  };
 }
