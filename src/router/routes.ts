@@ -15,7 +15,12 @@ const routes: RouteRecordRaw[] = [
     props: true,
     meta: { requiresAuth: true },
   },
-  // Adicione esta linha
+  {
+    path: '/edit/:entity/:id',
+    component: () => import('pages/form/EditForm.vue'),
+    props: true,
+    meta: { requiresAuth: true },
+  },
   { path: '/login', component: () => import('pages/auth/LoginPage.vue') },
   { path: '/register', component: () => import('pages/auth/RegisterPage.vue') },
   { path: '/logout', component: () => import('pages/auth/LoginPage.vue') },
@@ -24,7 +29,7 @@ const routes: RouteRecordRaw[] = [
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    component: () => import('pages/general/ErrorNotFound.vue'),
   },
 ];
 

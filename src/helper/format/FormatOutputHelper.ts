@@ -8,7 +8,6 @@ export class FormatOutputHelper<Item> {
     const arrItems: Item[] = [];
     for await (const item of items)
       arrItems.push(await this.formatOutputItem(item));
-
     return arrItems;
   }
 

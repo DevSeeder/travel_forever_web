@@ -37,4 +37,10 @@ export default {
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
+
+.flex-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
 </style>

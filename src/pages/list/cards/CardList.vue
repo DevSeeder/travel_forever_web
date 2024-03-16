@@ -48,7 +48,6 @@
 </template>
 
 <script lang="ts">
-import 'src/css/pages/list/list.css';
 import 'src/css/pages/list/filter.css';
 import { defineComponent, onMounted, ref } from 'vue';
 import { QCard, QCardSection, QImg, useQuasar } from 'quasar';

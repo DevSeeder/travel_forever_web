@@ -45,6 +45,22 @@ export class HttpService {
     }
   }
 
+  async patch<Response>(
+    url: string,
+    data: object | Array<unknown>,
+    config = {}
+  ): Promise<HttpResponseDto<Response>> {
+    try {
+      const response = await this.http.patch(url, data, config);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (err) {
+      return this.handleError(err);
+    }
+  }
+
   private handleError(err: unknown) {
     let message;
     if (err instanceof AxiosError) {

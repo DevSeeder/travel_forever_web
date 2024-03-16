@@ -3,22 +3,13 @@ import { ListColumnBuilder } from 'src/builders/ListColumnBuilder';
 import { ListColumn } from 'src/interface/components/ListColumn';
 import { PaginatedResponse } from 'src/interface/PaginatedResponse';
 import { FormResponse } from 'src/interface/schema/FormResponse';
-import { ClientTravelForeverService } from '../../client/ClientTravelForeverService';
-import { FieldSchema } from 'src/interface/schema/FieldSchema';
 import { ListInputFilterBuilder } from 'src/builders/ListInputFilterBuilder';
 import { ListInputFilter } from 'src/interface/components/ListInputFilter';
 import { AbstractWebService } from '../AbstractWebService';
-import store from 'src/store';
 
 export class ListService<Item> extends AbstractWebService {
-  protected clientService: ClientTravelForeverService;
-  protected fields: FieldSchema[] = [];
-
   constructor(protected readonly entity: string) {
     super(entity);
-    this.clientService = new ClientTravelForeverService(
-      store.getters['auth/token']
-    );
   }
 
   async loadColumns(): Promise<ListColumn[]> {
@@ -47,16 +38,5 @@ export class ListService<Item> extends AbstractWebService {
 
   protected async formatOutput(items: Item[]) {
     return items;
-  }
-
-  protected async getFields(): Promise<FieldSchema[]> {
-    if (this.fields.length) return this.fields;
-
-    const fieldsData: FormResponse = await storageService.getValue(
-      `${this.entity}_fields`,
-      `/${this.entity}/form/fields`
-    );
-    this.fields = fieldsData.fields;
-    return this.fields;
   }
 }

@@ -31,4 +31,16 @@ export class ClientTravelForeverService extends HttpService {
   ): Promise<HttpResponseDto<any>> {
     return this.get(`/${entity}`, queryParams);
   }
+
+  async getById(entity: string, id: string): Promise<HttpResponseDto<any>> {
+    return this.get(`/${entity}/${id}`);
+  }
+
+  async updateById(
+    entity: string,
+    id: string,
+    data: object
+  ): Promise<HttpResponseDto<any>> {
+    return this.patch(`/${entity}/${id}`, data);
+  }
 }

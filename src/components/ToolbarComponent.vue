@@ -35,6 +35,10 @@ export default {
       type: String,
       required: true,
     },
+    action: {
+      type: String,
+      required: true,
+    },
   },
   methods: {
     toggleFilter() {
@@ -58,9 +62,10 @@ export default {
       metaValues.value = {
         translations: entitySchema.translations,
       };
-      title.value =
-        entitySchema.translations?.listLabel ||
-        entitySchema.translations.entityLabel;
+      title.value = service.actionTitle(
+        props.action,
+        entitySchema.translations
+      );
     });
 
     return {
