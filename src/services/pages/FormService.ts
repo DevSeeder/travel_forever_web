@@ -25,12 +25,16 @@ export class FormService<Item> extends AbstractWebService {
     return this.fields;
   }
 
-  async loadItem(id: string): Promise<PaginatedResponse<Item>> {
+  async loadItem(
+    id: string
+  ): Promise<HttpResponseDto<{ rawItem: Item; item: Item }>> {
     const response = await this.clientService.getById(this.entity, id);
-    const formatedItems = await new FormFormatOutputHelper(
+    if (!response.success) return response;
+    const rawItem = { ...response.data };
+    response.data = await new FormFormatOutputHelper(
       await this.getFields()
     ).formatOutputItem(response.data);
-    return formatedItems;
+    return { ...response, data: { item: response.data, rawItem } };
   }
 
   async updateItem(id: string, data: object): Promise<HttpResponseDto<any>> {

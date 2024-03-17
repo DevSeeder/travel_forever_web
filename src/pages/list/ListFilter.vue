@@ -106,7 +106,6 @@
 
 <script lang="ts">
 import { useQuasar } from 'quasar';
-import { useCustomLoading } from 'src/composable/useCustomLoading';
 import { ListService } from 'src/services/pages/list/ListService';
 import { defineComponent, ref } from 'vue';
 
@@ -141,8 +140,6 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const $q = useQuasar();
-    const { showLoading, hideLoading } = useCustomLoading($q);
-
     const activeFilters = ref({});
     const filterFields = ref([]);
 
@@ -151,7 +148,7 @@ export default defineComponent({
     }
 
     async function applyFilters() {
-      showLoading();
+      $q.loading.show();
       let filterParams = {};
       Object.keys(activeFilters.value).forEach((key) => {
         if (
@@ -169,7 +166,7 @@ export default defineComponent({
         filterParams[key] = activeFilters.value[key];
       });
       await props.loadItems(filterParams);
-      hideLoading();
+      $q.loading.hide();
     }
 
     function resetFilters() {

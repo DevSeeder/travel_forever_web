@@ -31,6 +31,9 @@ export class ObjectHelper {
         alteracoes[chave] = undefined;
       }
     });
+
+    if (!Object.keys(alteracoes).length) return false;
+
     return alteracoes;
   }
 }

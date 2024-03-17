@@ -12,14 +12,14 @@
         class="q-mr-md q-mb-md filter-field"
       >
         <q-input
-          v-if="['text', 'currency'].includes(field.type)"
+          v-if="InputTypes.Text.includes(field.type)"
           v-model="item[field.key]"
           :label="field.translation.fieldLabel"
           dense
           class="custom-border"
         />
         <q-input
-          v-else-if="['date', 'datetime'].includes(field.type)"
+          v-else-if="InputTypes.Date.includes(field.type)"
           v-model="item[field.key]"
           :label="field.translation.fieldLabel"
           dense
@@ -27,32 +27,41 @@
           type="date"
         />
         <q-input
-          v-else-if="field.type === 'number'"
+          v-else-if="InputTypes.Number.includes(field.type)"
           v-model="item[field.key]"
           :label="field.translation.fieldLabel"
           dense
           type="number"
         />
+        <!-- `selectRef_${field.key}` -->
         <q-select
-          v-else-if="field.type === 'externalId'"
+          v-else-if="InputTypes.Select.includes(field.type)"
           v-model="item[field.key]"
-          :options="field.options"
+          :class="`select_field_${field.key}`"
+          ref="selectRefs"
+          :options="
+            (field.values ?? []).map((opt) => ({
+              label: opt.name,
+              value: opt._id,
+              icon: opt?.icon?.value,
+            }))
+          "
           :label="field.translation.fieldLabel"
           outlined
-          multiple
           class="custom-border"
-          use-chips
         >
           <template v-slot:option="scope">
             <q-item
               :clickable="true"
               :class="{
                 'selected-item':
-                  item[field.key] && item[field.key].includes(scope.opt.value),
+                  rawItem[field.key] &&
+                  rawItem[field.key]._id == scope.opt.value,
               }"
+              @click="toggleSelection(field.key, scope.opt)"
             >
               <q-item-section>
-                {{ scope.opt.translation.fieldLabel }}
+                {{ scope.opt.label }}
               </q-item-section>
               <q-item-section avatar>
                 <q-icon :name="scope.opt.icon" />
@@ -61,17 +70,21 @@
           </template>
         </q-select>
         <q-toggle
-          v-else-if="field.type === 'boolean'"
+          v-else-if="InputTypes.Toggle.includes(field.type)"
           v-model="item[field.key]"
-          :label="field.label"
+          :label="field.translation.fieldLabel"
           :disable="false"
           true
           color="blue"
           @update:model-value="(value) => {}"
         />
-        {{ field.type === 'boolean' ? console.log('boolean') : null }}
-        {{ field.type === 'boolean' ? console.log(field.label) : null }}
-        {{ field.type === 'boolean' ? console.log(item[field.key]) : null }}
+        <q-input
+          v-else-if="InputTypes.Datetime.includes(field.type)"
+          filled
+          v-model="item[field.key]"
+          type="datetime-local"
+          :label="field.translation.fieldLabel"
+        />
       </div>
 
       <div>
@@ -91,11 +104,13 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from 'vue';
+import 'src/css/pages/form/form.css';
 import ToolbarComponent from 'src/components/ToolbarComponent.vue';
 import { FormService } from 'src/services/pages/FormService';
 import { useQuasar } from 'quasar';
 import { useCustomLoading } from 'src/composable/useCustomLoading';
 import { ObjectHelper } from 'src/helper/types/ObjectHelper';
+import { InputTypes } from '../../app.constants';
 
 export default defineComponent({
   name: 'EditForm',
@@ -112,23 +127,53 @@ export default defineComponent({
       required: true,
     },
   },
+  methods: {
+    toggleSelection(fieldKey, option) {
+      if (!this.rawItem[fieldKey]) this.rawItem[fieldKey] = {};
+      this.rawItem[fieldKey]._id = option.value;
+      this.item[fieldKey] = option.label;
+      (
+        document.querySelector(
+          `.select_field_${fieldKey} .q-icon.notranslate.material-icons.q-select__dropdown-icon`
+        ) as any
+      ).click();
+    },
+  },
 
   setup(props) {
     const service = new FormService(props.entity);
-
+    const mySelect = ref(null);
     const fields = ref([]);
     const item = ref({});
     const originalItem = ref({});
+    const rawItem = ref({});
+    const selectRefs = ref({});
     const $q = useQuasar();
     const { showLoading, hideLoading } = useCustomLoading($q);
 
     async function onSubmit() {
       $q.loading.show();
       const diffItem = ObjectHelper.diffObject(originalItem.value, item.value);
-      diffItem['symbol'] = null;
+      fields.value
+        .filter((field) => field.type == 'externalId')
+        .forEach((field) => {
+          if (!diffItem[field.key]) return;
+          diffItem[field.key] = rawItem.value[field.key]._id;
+        });
 
-      console.log('diffItem');
+      if (!diffItem) {
+        $q.loading.hide();
+        $q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Registro alterado com sucesso!',
+        });
+        return;
+      }
+
       console.log(diffItem);
+
       const response = await service.updateItem(props.id, diffItem);
 
       $q.loading.hide();
@@ -149,6 +194,8 @@ export default defineComponent({
         icon: 'done',
         message: 'Registro alterado com sucesso!',
       });
+
+      await loadItem();
     }
 
     function onReset() {
@@ -156,20 +203,46 @@ export default defineComponent({
     }
 
     onMounted(async () => {
-      showLoading();
-      await loadColumns();
-      await loadItem();
-      hideLoading();
+      try {
+        showLoading();
+        await loadColumns();
+        await loadItem();
+        hideLoading();
+      } catch (err) {
+        hideLoading();
+        $q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: JSON.stringify(err),
+        });
+      }
     });
 
     async function loadColumns() {
       fields.value = await service.loadFields();
+      // fields.value
+      //   .filter((field) => field.type === 'externalId')
+      //   .forEach((field) => {
+      //     selectRefs.value[field.key] = {};
+      //   });
     }
 
     async function loadItem() {
-      const data = await service.loadItem(props.id);
-      item.value = data;
-      originalItem.value = { ...data };
+      const response = await service.loadItem(props.id);
+      if (!response.success) {
+        $q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: JSON.stringify(response.data),
+        });
+        return;
+      }
+      console.log(response);
+      item.value = response.data['item'];
+      originalItem.value = { ...(response.data['item'] as object) };
+      rawItem.value = { ...(response.data['rawItem'] as object) };
     }
 
     return {
@@ -177,6 +250,10 @@ export default defineComponent({
       fields,
       onSubmit,
       onReset,
+      InputTypes,
+      rawItem,
+      selectRefs,
+      mySelect,
     };
   },
 });
