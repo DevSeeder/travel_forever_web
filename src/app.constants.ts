@@ -9,4 +9,5 @@ export const InputTypes = {
   Datetime: ['datetime'],
   Select: ['externalId'],
   Toggle: ['boolean'],
+  Link: ['link'],
 };

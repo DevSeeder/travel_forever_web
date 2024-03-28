@@ -1,5 +1,4 @@
 import { storageService } from '../storage/StorageService';
-import { PaginatedResponse } from 'src/interface/PaginatedResponse';
 import { FormResponse } from 'src/interface/schema/FormResponse';
 import { ClientTravelForeverService } from '../client/ClientTravelForeverService';
 import { FieldSchema } from 'src/interface/schema/FieldSchema';
